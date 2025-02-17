@@ -1,23 +1,23 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom'
 import { 
   Dialog, DialogTitle,DialogContent,DialogActions,Button,
   InputLabel,FormControl,MenuItem,Select, SelectChangeEvent,FormHelperText,
-  Accordion,AccordionSummary,AccordionDetails
  } from '@mui/material'
-import { IonInput,IonDatetime,IonItem } from '@ionic/react'
-import db from '../backend/db';
+import { IonInput,IonDatetime,useIonRouter } from '@ionic/react'
+import db, { Tenant } from '../backend/db';
 
-//icon
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { FaHouseChimneyUser } from "react-icons/fa6";
 
 interface NewTenantProps {
   open: boolean;
   onClose: () => void;
 }
 
-const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
+const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {  
+  const router = useIonRouter()
+  const GoTo = useCallback((address:string)=>{
+      router.push(address)
+  },[router])
+
   //name
   const [name, setName] = useState<string>(' ');
   const handleInputName = useCallback((e: any) => {
@@ -37,39 +37,63 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
     setAmount(e.detail.value)
   },[])
 
+  const getDate = useCallback((e?: any) => {
+    const date = e ? new Date(e) : new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${year}-${month < 10 ? '0'+month : month}-${day < 10 ? '0'+day : day}`
+  },[])
+
   //date
-  const [startDate, setStartDate] = useState<string | string[] | null | undefined>();
+  const [startDate, setStartDate] = useState<string>();
   const dateRef = useRef<HTMLIonDatetimeElement>(null);
   const handleInputDate = useCallback(() => {
     if(!dateRef.current) return;
-    setStartDate(dateRef.current.value)
+    setStartDate(getDate(dateRef.current.value))
   },[dateRef])
 
   //handle save button click
   const [helperName, setHelperName] = useState<string>('');
   const [helperRoom, setHelperRoom] = useState<string>('');
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const handleSave = useCallback(() => {
+  const [id,setId] = useState<number>()
+  const handleSave = useCallback( async () => {
     if(!name || !room) {
       if(!name) setHelperName('Name is required')
       if(!room) setHelperRoom('Room is required')
       return;
     };
-    console.log({name,room,startDate})
-    setIsOpen(true)
-  },[name,room,startDate,onClose])
 
-  //handle open button click
-  const handleOpen = useCallback(() => {
     
-  }, []);
+    const tenant: Tenant = {
+      name,
+      room,
+      date: startDate as string,
+      coin: amount
+    }
+
+    if (id !== undefined) {
+      await db.tenants.update(id, tenant).catch(async (err: any) => {
+        console.error(err);
+      });
+    } else {
+      await db.tenants.add(tenant).then((newId) => {
+        setId(newId);
+        setIsOpen(true);
+      }).catch((err: any) => {
+        console.error(err);
+      });
+    }
+    
+  },[name,room,startDate,onClose])
 
   //every open reset
   useEffect(() => {
     if(open){
       setName('')
       setRoomSelected('')
-      setStartDate('')
+      setStartDate(getDate())
       setAmount(0)
       setIsOpen(false)
       setHelperName('')
@@ -81,10 +105,9 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>New Tenant</DialogTitle>
       <DialogContent sx={{scrollbarWidth: 'none'}}>
-        <div className='flex flex-col gap-2'>
-          <IonInput counter={true} maxlength={50} helperText={helperName} value={name} onIonInput={handleInputName} labelPlacement='floating' label='Name' />
+        <div className='flex flex-col gap-4'>
           <FormControl variant='standard' className='w-full m-1'>
-            <InputLabel>Room Number</InputLabel>
+            <InputLabel>Room Number*</InputLabel>
             <Select label="Room Number" value={room} onChange={handleInputRoom}>
             {
               roomNumber.map((room,index) => (
@@ -94,21 +117,15 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
             </Select>
             <FormHelperText>{helperRoom}</FormHelperText>
           </FormControl>
-          <Accordion variant='outlined'>
-            <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
-              <span>Advance Pay</span>
-            </AccordionSummary>
-            <AccordionDetails>
-              <IonInput onIonInput={handleInputAmount} type='number' counter={true} maxlength={6} labelPlacement='stacked' label='Amount' />
-            </AccordionDetails>
-          </Accordion>
+          <IonInput counter={true} maxlength={50} helperText={helperName} value={name} onIonInput={handleInputName} labelPlacement='floating' label='Name*' />
+          <IonInput onIonInput={handleInputAmount} type='number' counter={true} maxlength={6} labelPlacement='stacked' label='Amount' />
           <IonDatetime onIonChange={handleInputDate} ref={dateRef} presentation='date'/>
         </div>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
         <Button onClick={handleSave}>Save</Button>
-        <Button component={Link} to='/tenants/profile?id=1' onClick={handleOpen} disabled={!isOpen}>Open</Button>
+        <Button onClick={()=>GoTo(`/tenants/profile?id=${id}`)} disabled={!isOpen}>Open</Button>
       </DialogActions>
     </Dialog>
   );

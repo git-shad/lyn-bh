@@ -77,7 +77,7 @@ const App: React.FC = () => {
         <IonPage id='main'>
           <IonHeader translucent={true}>
             <IonToolbar>
-              <Button size='small'>
+              <Button>
                 <IonMenuButton/>
               </Button>
             </IonToolbar>
