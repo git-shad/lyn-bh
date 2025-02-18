@@ -2,17 +2,17 @@ import { Dexie, type EntityTable } from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Storage } from '@capacitor/storage'
 
-interface TenantElectricBill {
+interface ElectricBill {
     amount: number
     date: string
 }
 
-interface TenantWaterBill {
+interface WaterBill {
     amount: number
     date: string
 }
 
-interface TenantRentBill {
+interface RentBill {
     amount: number
     date: string
 }
@@ -20,9 +20,9 @@ interface TenantRentBill {
 interface History{
     id?: number
     tenant_id: number
-    electric_bills?: TenantElectricBill[]
-    water_bills?: TenantWaterBill[]
-    rent_bills?: TenantRentBill[]
+    electric_bills?: ElectricBill[]
+    water_bills?: WaterBill[]
+    rent_bills?: RentBill[]
 }
 
 interface Tenant {
@@ -32,9 +32,9 @@ interface Tenant {
     date?: string
     coin?: number
     balance?: number
-    electric_bills?: TenantElectricBill[]
-    water_bills?: TenantWaterBill[]
-    rent_bills?: TenantRentBill[]
+    electric_bills?: ElectricBill[]
+    water_bills?: WaterBill[]
+    rent_bills?: RentBill[]
 }
 
 const db = new Dexie('tenantDB') as Dexie & {
@@ -53,6 +53,6 @@ const rentCost = async () =>{
 }
 
 type Tenants = Tenant[];
-export type { Tenant, Tenants, History }
+export type { Tenant, Tenants, History, RentBill, ElectricBill, WaterBill }
 export { useLiveQuery, db, Storage, rentCost}
 export default db;

@@ -83,7 +83,8 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       room,
       date: startDate as string,
       coin: amount,
-      balance: balance
+      balance: balance,
+      rent_bills: balance > 0 ? [{amount: balance, date: startDate as string}] : []
     }
  
     if (id !== undefined) {
