@@ -4,7 +4,7 @@ import {
   InputLabel,FormControl,MenuItem,Select, SelectChangeEvent,FormHelperText,
  } from '@mui/material'
 import { IonInput,IonDatetime,useIonRouter } from '@ionic/react'
-import db, { Tenant } from '../backend/db';
+import db, { Tenant, rentCost } from '../backend/db';
 
 
 interface NewTenantProps {
@@ -12,7 +12,7 @@ interface NewTenantProps {
   onClose: () => void;
 }
 
-const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {  
+const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
   const router = useIonRouter()
   const GoTo = useCallback((address:string)=>{
       router.push(address)
@@ -33,16 +33,27 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
 
   //advance pay
   const [amount, setAmount] = useState<number>(0);
-  const handleInputAmount = useCallback((e: any) => {
-    setAmount(e.detail.value)
-  },[])
+  const [balance, setBalance] = useState<number>(0)
+  const [isBalancePaid,setIsBalancePaid] = useState<boolean>(false)
+  const handleInputAmount = useCallback(async (e: any) => {
+    let amount = e.detail.value
+    const rent = await rentCost()
+
+    if(amount >= rent){
+      amount = amount - rent
+      setAmount(amount)
+      setBalance(0)
+      setIsBalancePaid(true)
+    }else{
+      setIsBalancePaid(false)
+      setAmount(amount)
+      setBalance(rent)
+    }
+  },[balance,amount])
 
   const getDate = useCallback((e?: any) => {
     const date = e ? new Date(e) : new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${year}-${month < 10 ? '0'+month : month}-${day < 10 ? '0'+day : day}`
+    return date.toLocaleDateString()
   },[])
 
   //date
@@ -58,6 +69,8 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
   const [helperRoom, setHelperRoom] = useState<string>('');
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [id,setId] = useState<number>()
+  const [hId,setHId] = useState<number>()//history id
+  
   const handleSave = useCallback( async () => {
     if(!name || !room) {
       if(!name) setHelperName('Name is required')
@@ -65,20 +78,27 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       return;
     };
 
-    
     const tenant: Tenant = {
       name,
       room,
       date: startDate as string,
-      coin: amount
+      coin: amount,
+      balance: balance
     }
-
+ 
     if (id !== undefined) {
-      await db.tenants.update(id, tenant).catch(async (err: any) => {
+      await db.tenants.update(id, tenant).then(async ()=>{
+        if(hId !== undefined ){
+          await db.history.update(hId,{rent_bills: [{amount: balance, date: startDate as string}]})
+        }
+      }).catch(async (err: any) => {
         console.error(err);
       });
     } else {
-      await db.tenants.add(tenant).then((newId) => {
+      await db.tenants.add(tenant).then(async (newId) => {
+        if(newId !== undefined && isBalancePaid){
+          await db.history.add({tenant_id: newId,rent_bills: [{amount: balance, date: startDate as string}]}).then(newId => setHId(newId))
+        }
         setId(newId);
         setIsOpen(true);
       }).catch((err: any) => {
@@ -86,7 +106,7 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       });
     }
     
-  },[name,room,startDate,onClose])
+  },[name,room,startDate,onClose,amount,balance,id,hId,isBalancePaid])
 
   //every open reset
   useEffect(() => {

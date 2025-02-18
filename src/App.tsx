@@ -37,23 +37,26 @@ setupIonicReact();
 
 import {
   IonToolbar,IonMenu,IonHeader,IonContent,IonPage,IonMenuButton,IonTitle,
-  IonList,IonItem,IonMenuToggle
+  IonList,IonItem,IonMenuToggle,
 } from '@ionic/react'
 import {Button,SvgIcon} from '@mui/material'
 import Tenants from './pages/Tenants';
 import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
+import { useCallback } from 'react'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { FaHouseChimneyUser } from "react-icons/fa6";
 import PaymentsIcon from '@mui/icons-material/Payments';
 
+
 const App: React.FC = () => {
+
 
   return (
     <IonReactRouter>
-      <IonMenu contentId='main'>
+      <IonMenu id='main-menu' contentId='main' >
         <IonHeader>
           <IonToolbar>
             <IonTitle>Menu</IonTitle>
