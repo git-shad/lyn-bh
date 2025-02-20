@@ -43,7 +43,6 @@ import {Button,SvgIcon} from '@mui/material'
 import Tenants from './pages/Tenants';
 import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
-import { useCallback } from 'react'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -56,7 +55,7 @@ const App: React.FC = () => {
 
   return (
     <IonReactRouter>
-      <IonMenu id='main-menu' contentId='main' >
+      <IonMenu id='main-menu' contentId='main' type='overlay'>
         <IonHeader>
           <IonToolbar>
             <IonTitle>Menu</IonTitle>

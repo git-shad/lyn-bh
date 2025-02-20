@@ -35,19 +35,23 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
   const [amount, setAmount] = useState<number>(0);
   const [balance, setBalance] = useState<number>(0)
   const [isBalancePaid,setIsBalancePaid] = useState<boolean>(false)
-  const handleInputAmount = useCallback(async (e: any) => {
-    let amount = e.detail.value
-    const rent = await rentCost()
+  const [rent,setRent] = useState<number>(0)
+  const handleInputAmount = useCallback(async (e?: any) => {
+    let amount = e?.detail.value ? e?.detail.value : 0 
+    const coin = await rentCost()
 
-    if(amount >= rent){
-      amount = amount - rent
+    if(amount >= coin){
+      console.log(balance)
+      amount = amount - coin
       setAmount(amount)
       setBalance(0)
       setIsBalancePaid(true)
+      setRent(coin)
     }else{
       setIsBalancePaid(false)
       setAmount(amount)
-      setBalance(rent)
+      setBalance(coin)
+      setRent(0)
     }
   },[balance,amount])
 
@@ -86,19 +90,19 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       balance: balance,
       rent_bills: balance > 0 ? [{amount: balance, date: startDate as string}] : []
     }
- 
+
     if (id !== undefined) {
-      await db.tenants.update(id, tenant).then(async ()=>{
+      await db.tenants.update(id, tenant).then(()=>{
         if(hId !== undefined ){
-          await db.history.update(hId,{rent_bills: [{amount: balance, date: startDate as string}]})
+          db.history.update(hId,{bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: ''}]})
         }
       }).catch(async (err: any) => {
         console.error(err);
       });
     } else {
-      await db.tenants.add(tenant).then(async (newId) => {
-        if(newId !== undefined && isBalancePaid){
-          await db.history.add({tenant_id: newId,rent_bills: [{amount: balance, date: startDate as string}]}).then(newId => setHId(newId))
+      await db.tenants.add(tenant).then((newId) => {
+        if(newId !== undefined){
+          db.history.add({tenant_id: newId,bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: getDate()}]}).then(newId => setHId(newId))
         }
         setId(newId);
         setIsOpen(true);
@@ -107,11 +111,19 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       });
     }
     
-  },[name,room,startDate,onClose,amount,balance,id,hId,isBalancePaid])
+  },[name,room,startDate,onClose,amount,balance,id,hId,isBalancePaid,rent])
 
+  const handleOpen = useCallback(()=>{
+    handleSave().then(()=>{
+      GoTo(`/tenants/profile?id=${id}`)
+    })
+  },[id])
+  
   //every open reset
   useEffect(() => {
     if(open){
+      handleInputAmount()
+
       setName('')
       setRoomSelected('')
       setStartDate(getDate())
@@ -146,7 +158,7 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
         <Button onClick={handleSave}>Save</Button>
-        <Button onClick={()=>GoTo(`/tenants/profile?id=${id}`)} disabled={!isOpen}>Open</Button>
+        <Button onClick={handleOpen} disabled={!isOpen}>Open</Button>
       </DialogActions>
     </Dialog>
   );
