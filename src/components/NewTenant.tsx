@@ -25,7 +25,7 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
   },[])
 
   //room
-  const [roomNumber, setRoomNumber] = useState(['ROOM N1','ROOM N2','ROOM N3','ROOM N4','ROOM N5','ROOM N6','ROOM N7','ROOM N8','ROOM N9','ROOM N10','ROOM N11','ROOM N12','ROOM N13','ROOM N14','ROOM N15','ROOM N16','ROOM N17','ROOM N18','ROOM N19','ROOM N20']);
+  const [roomNumber, setRoomNumber] = useState(['ROOM N1','ROOM N2','ROOM N3','ROOM N4','ROOM N5','ROOM N6','ROOM N7','ROOM N8','ROOM N9&10','ROOM N11','ROOM N12','ROOM N13','ROOM N14']);
   const [room, setRoomSelected] = useState<string>('');
   const handleInputRoom = useCallback((e: SelectChangeEvent) => {
     setRoomSelected(e.target.value as string)
