@@ -11,6 +11,10 @@ import NewTenant from '../components/NewTenant';
 import AddIcon from '@mui/icons-material/Add';
 
 const Tenants: React.FC = () => {
+  useEffect(()=>{
+    db.open()
+  },[])
+  
   const tenants = useLiveQuery(() => db.tenants.toArray(),[]);
   const [data, setData] = useState<Tenants>();
 

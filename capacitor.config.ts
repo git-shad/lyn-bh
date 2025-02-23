@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
 ,
     android: {
        buildOptions: {
-          keystorePath: '/home/ishad/lyn-bh/lynbh-release-key.jks',
+          keystorePath: '/home/ishad/project/lyn-bh/lynbh-release-key.jks',
           keystoreAlias: 'lynbh',
        }
     }

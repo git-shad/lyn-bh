@@ -1,6 +1,5 @@
 import { Dexie, type EntityTable } from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Storage } from '@capacitor/storage'
 
 interface ElectricBill {
     amount: number
@@ -24,7 +23,6 @@ interface TenantBills{
     end_date: string
 }
 interface TenantHistory{
-    id?: number
     tenant_id: number
     bills?: TenantBills[]
 }
@@ -41,22 +39,35 @@ interface Tenant {
     rent_bills?: RentBill[]
 }
 
-const db = new Dexie('tenantDB') as Dexie & {
-    tenants: EntityTable<Tenant,'id'>
-    history: EntityTable<TenantHistory,'id'>
+interface Setting{
+    key: string
+    value: any
 }
 
-db.version(11).stores({
+const db = new Dexie('tenantDB') as Dexie & {
+    tenants: EntityTable<Tenant,'id'>
+    history: EntityTable<TenantHistory,'tenant_id'>
+    setting: EntityTable<Setting,'key'>
+}
+
+db.version(15).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills',
-    history: '++id,tenant_id,*TenantBills'
+    history: 'tenant_id,*TenantBills',
+    setting: 'key,value'
+})
+
+//first run when database are created
+db.on('populate',async ()=>{
+    await db.setting.add({key: 'rent', value: 1000})
 })
 
 const rentCost = async () =>{
-  const { value } = await Storage.get({ key: 'rent' })
-  return parseInt(value ?? '0')
+  const setting = await db.setting.get('rent')
+  if(!setting) return;
+  return setting.value
 }
 
 type Tenants = Tenant[];
 export type { Tenant, Tenants, TenantHistory, RentBill, ElectricBill, WaterBill }
-export { useLiveQuery, db, Storage, rentCost}
+export { useLiveQuery, db, rentCost}
 export default db;

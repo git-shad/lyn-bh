@@ -73,7 +73,6 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
   const [helperRoom, setHelperRoom] = useState<string>('');
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [id,setId] = useState<number>()
-  const [hId,setHId] = useState<number>()//history id
   
   const handleSave = useCallback( async () => {
     if(!name || !room) {
@@ -88,22 +87,20 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       date: startDate as string,
       coin: amount,
       balance: balance,
-      rent_bills: balance > 0 ? [{amount: balance, date: startDate as string}] : []
-    }
+      rent_bills: balance > 0 ? [{amount: balance, date: startDate as string}] : [],
+      water_bills: [],
+      electric_bills: []
+    } 
 
     if (id !== undefined) {
       await db.tenants.update(id, tenant).then(()=>{
-        if(hId !== undefined ){
-          db.history.update(hId,{bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: ''}]})
-        }
+        db.history.update(id,{bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: ''}]})
       }).catch(async (err: any) => {
         console.error(err);
       });
     } else {
-      await db.tenants.add(tenant).then((newId) => {
-        if(newId !== undefined){
-          db.history.add({tenant_id: newId,bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: getDate()}]}).then(newId => setHId(newId))
-        }
+      await db.tenants.add(tenant).then(async (newId) => {
+        await db.history.add({tenant_id: newId,bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: getDate()}]})
         setId(newId);
         setIsOpen(true);
       }).catch((err: any) => {
@@ -111,7 +108,7 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       });
     }
     
-  },[name,room,startDate,onClose,amount,balance,id,hId,isBalancePaid,rent])
+  },[name,room,startDate,onClose,amount,balance,id,isBalancePaid,rent])
 
   const handleOpen = useCallback(()=>{
     handleSave().then(()=>{
@@ -128,9 +125,13 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       setRoomSelected('')
       setStartDate(getDate())
       setAmount(0)
+      setBalance(0)
+      setIsBalancePaid(false)
+      setRent(0)
       setIsOpen(false)
       setHelperName('')
       setHelperRoom('')
+      setId(undefined)
     }
   },[open])
 
