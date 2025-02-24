@@ -39,32 +39,35 @@ interface Tenant {
     rent_bills?: RentBill[]
 }
 
-interface Setting{
+interface Storage{
     key: string
     value: any
 }
 
+
 const db = new Dexie('tenantDB') as Dexie & {
     tenants: EntityTable<Tenant,'id'>
     history: EntityTable<TenantHistory,'tenant_id'>
-    setting: EntityTable<Setting,'key'>
+    storage: EntityTable<Storage,'key'>
 }
 
-db.version(15).stores({
+db.version(21).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills',
     history: 'tenant_id,*TenantBills',
-    setting: 'key,value'
+    storage: 'key,value'
 })
 
 //first run when database are created
 db.on('populate',async ()=>{
-    await db.setting.add({key: 'rent', value: 1000})
+    await db.storage.add({key: 'rent', value: 1000})
+    await db.storage.add({key: 'rate', value: 8.5907})
+    await db.storage.add({key: 'tax', value: 36.42})
 })
 
 const rentCost = async () =>{
-  const setting = await db.setting.get('rent')
-  if(!setting) return;
-  return setting.value
+  const storage = await db.storage.get('rent')
+  if(!storage) return;
+  return storage.value
 }
 
 type Tenants = Tenant[];

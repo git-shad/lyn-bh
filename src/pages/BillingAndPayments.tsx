@@ -15,17 +15,24 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
+interface ElectricPast{
+  room: string
+  amount: number
+}
 
 const BillingAndPayments: React.FC = () => {
-  const tenants = useLiveQuery(() => db.tenants.toArray(),[])
+  const tenants = useLiveQuery(() => db.tenants.toArray(),[]) 
   const [rentAmount,setRentAmount] = useState<number>(0)
 
-  const [person,setPerson] = useState<{[room: string]: number}>({})
+  const [personCount,setPersonCount] = useState<{[room: string]: number}>({})
+  const [count,setCount] = useState<number>(0)
   const [rooms,setRooms] = useState<string[]>([])
   const [room, setRoomSelected] = useState<string>('');
   const handleInputRoom = useCallback((e: SelectChangeEvent) => {
-      setRoomSelected(e.target.value as string)
-  },[])
+    const room: string = e.target.value as string
+    setRoomSelected(room)
+    setCount(personCount[room])
+  },[rooms])
 
   useEffect(()=>{
     if(tenants){
@@ -46,7 +53,7 @@ const BillingAndPayments: React.FC = () => {
         }
       })
       setRooms(rooms.filter(r => Array.from(new Set(room)).includes(r)))
-      setPerson(roomCount)
+      setPersonCount(roomCount)
     }
   },[tenants])
 
@@ -55,7 +62,7 @@ const BillingAndPayments: React.FC = () => {
   },[])
   
   useEffect(()=>{
-    db.setting.get('rent').then(result => setRentAmount(result?.value))
+    db.storage.get('rent').then(result => setRentAmount(result?.value))
   },[])
 
   //for rent 
@@ -65,7 +72,7 @@ const BillingAndPayments: React.FC = () => {
   },[])
 
   const handleRentAmount = useCallback(()=>{
-    db.setting.update('rent',{value: rentAmount}).then(()=>{
+    db.storage.update('rent',{value: rentAmount}).then(()=>{
       setIsRentMSGShow(true)
       setTimeout(()=>{
         setIsRentMSGShow(false) 
@@ -103,8 +110,28 @@ const BillingAndPayments: React.FC = () => {
   const [isWaterShow,setIsWaterShow] = useState<boolean>(true)
   const [isElectricShow,setIsElectricShow] = useState<boolean>(true)
 
+  //computation for electric
+  const [past,setPast] = useState<number>(0)
+  const [present,setPresent] = useState<number>(0)
+  const [usage,setUsage] = useState<number>(0)
+  const [rate,setRate] = useState<number>(0)
+  const [tax,setTax] = useState<number>(0)
+  const [total,setTotal] = useState<number>(0)
+
+  useEffect(()=> setUsage(Math.abs(past - present)) ,[past,present])
+  useEffect(()=> setTotal(Math.round(((usage * rate) + tax))),[usage,rate,tax,count])
+  useEffect(()=>{
+    db.storage.get('rate').then((rate)=> setRate(rate?.value))
+    db.storage.get('tax').then((tax)=> setTax(tax?.value))
+  },[])
+
+
+  const handleElecticAmount = useCallback(()=>{
+    
+  },[past,present])
+
   return (
-    <Box className='flex flex-col gap-2 m-2 h-full'>
+    <Box className='flex flex-col gap-2 m-2 h-full overflow-auto'>
       { isRentShow && (
         <Paper elevation={5} className='flex flex-col gap-2 p-4'>
           <Box className='flex flex-row gap-2'>
@@ -151,7 +178,7 @@ const BillingAndPayments: React.FC = () => {
             <Box className='font-bold text-2xl '>Electric</Box>
             <Box className='ml-auto'><IconButton onClick={()=> setIsElectricShow(!isElectricShow)}><CloseIcon/></IconButton></Box>
           </Box>
-          <Box>
+          <Box className='flex flex-col gap-4'>
             <FormControl variant='standard' className='w-full m-1'>
               <InputLabel>Tenant Room</InputLabel>
               <Select label="Room Number" value={room} onChange={handleInputRoom}>
@@ -162,6 +189,18 @@ const BillingAndPayments: React.FC = () => {
               }
               </Select>
             </FormControl>
+            <Box className='flex flex-row gap-4'>
+              <IonInput value={count} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Person Count"/>
+              <IonInput value={total} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Total Amount" />
+            </Box>
+            <Box className='flex flex-row gap-4'>
+              <IonInput value={usage} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Usage" />
+              <IonInput value={rate} onIonInput={(e:any)=> setRate(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Rate" />
+              <IonInput value={tax} onIonInput={(e:any)=> setTax(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Tax" />              
+            </Box>
+            <IonInput value={past} onIonInput={(e:any)=> setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />
+            <IonInput value={present} onIonInput={(e:any)=> setPresent(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Present" />
+            <Button onClick={handleElecticAmount} startIcon={<DoneAllRoundedIcon/>} variant='contained' fullWidth>confirm</Button>
           </Box>
         </Paper>
       )}

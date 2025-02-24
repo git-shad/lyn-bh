@@ -33,10 +33,6 @@ const Profile: React.FC = () => {
   const [dWater,setWater] = useState<WaterBill[]>()
   const [history,setHistory] = useState<TenantHistory>()
 
-  useEffect(()=>{
-    db.open()
-  },[])
-
   useEffect(() => {
     if (id) {
       (async () => {

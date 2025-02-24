@@ -93,14 +93,18 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
     } 
 
     if (id !== undefined) {
-      await db.tenants.update(id, tenant).then(()=>{
-        db.history.update(id,{bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: ''}]})
+      await db.tenants.update(id, tenant).then(async ()=>{
+        if(id !== undefined){
+          await db.history.update(id,{bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: ''}]})
+        }
       }).catch(async (err: any) => {
         console.error(err);
       });
     } else {
       await db.tenants.add(tenant).then(async (newId) => {
-        await db.history.add({tenant_id: newId,bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: getDate()}]})
+        if(newId !== undefined){
+          await db.history.add({tenant_id: newId,bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: getDate()}]})
+        }
         setId(newId);
         setIsOpen(true);
       }).catch((err: any) => {
