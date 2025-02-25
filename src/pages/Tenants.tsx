@@ -38,11 +38,11 @@ const Tenants: React.FC = () => {
   return (
     <>
       <IonContent>
-        <IonSearchbar onIonInput={handleSearchInput} className='sticky top-0 z-10 '/>
+        <IonSearchbar onIonInput={handleSearchInput} className='sticky top-0 z-10 text-blue-500'/>
         <IonList className=''>
           {data?.map((tenant) => (
             <IonItem key={tenant.id}>
-              <Button component={Link} to={`/tenants/profile?id=${tenant.id}`} fullWidth color='inherit' sx={{justifyContent: 'left', textTransform: 'none'}}>{tenant.name}</Button>
+              <Button component={Link} to={`/tenants/profile?id=${tenant.id}`} fullWidth variant='text' sx={{justifyContent: 'left', textTransform: 'none'}}>{tenant.name}</Button>
             </IonItem>
           ))}
         </IonList>

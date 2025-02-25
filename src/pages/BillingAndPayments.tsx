@@ -54,7 +54,7 @@ const BillingAndPayments: React.FC = () => {
     setUsage(0)
     setTotal(0)
     setTotalFinal(0)
-  },[rooms])
+  },[])
 
   useEffect(()=>{
     (async ()=>{
@@ -139,7 +139,6 @@ const BillingAndPayments: React.FC = () => {
 
       const dateNow: string = new Date().toLocaleDateString()
       tenantSelected?.map( async (tenant) => {
-        console.log(totalFinal)
         const electric = tenant.electric_bills ? [...tenant.electric_bills, {amount: totalFinal, date: dateNow}] : [{amount: totalFinal, date: dateNow}]
         await db.tenants.update(tenant.id,{electric_bills: electric, balance: (Number(tenant.balance) + Number(totalFinal))})
       })

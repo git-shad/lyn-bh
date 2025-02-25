@@ -149,13 +149,13 @@ const Profile: React.FC = () => {
     <IonContent>
       <IonItem lines='none'>
         <Link to='/tenants'>
-          <IconButton slot='start'><KeyboardArrowLeftIcon/></IconButton>
+          <IconButton slot='start'><KeyboardArrowLeftIcon className='text-blue-500'/></IconButton>
         </Link>
         <Button onClick={()=>setIsHidden(!isHidden)} slot='end' variant='contained' size='small'>History</Button>
       </IonItem>
       <Box className='m-4'>
-        <Paper className='w-full ' elevation={5}>
-          <IonGrid className='bg-gray-100'>
+        <Box className='w-full' >
+          <IonGrid className='border border-blue-500 rounded-xl'>
             <IonRow className='m-2 mb-10 w-full flex justify-center'>
               <Box className='flex-col text-center'>
                 <Box className='font-bold text-3xl'>{tenant?.name}</Box>  
@@ -178,7 +178,7 @@ const Profile: React.FC = () => {
               </IonCol>
             </IonRow>
           </IonGrid>
-        </Paper>
+        </Box>
       </Box>
       <IonItem lines='none' className='mt-3' hidden={isHidden}>
         <IonGrid>

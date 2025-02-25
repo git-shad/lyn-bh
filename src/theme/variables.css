@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 :root {
-    --ion-color-scheme: light;
+    /* --ion-color-scheme: #131c2b; */
+    --ion-background-color: #131c2b;
+    --ion-text-color: #ffffff;
     font-family: 'Roboto', sans-serif;
 }
 
