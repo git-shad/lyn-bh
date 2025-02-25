@@ -15,51 +15,71 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
-interface ElectricPast{
-  room: string
-  amount: number
-}
-
 const BillingAndPayments: React.FC = () => {
   const tenants = useLiveQuery(() => db.tenants.toArray(),[]) 
   const [rentAmount,setRentAmount] = useState<number>(0)
-
-  const [personCount,setPersonCount] = useState<{[room: string]: number}>({})
-  const [count,setCount] = useState<number>(0)
+  const [personCount,setPersonCount] = useState<{[room: string]: number}>({})//room and count of person
+  const [count,setCount] = useState<number>(0)//count of person
   const [rooms,setRooms] = useState<string[]>([])
-  const [room, setRoomSelected] = useState<string>('');
-  const handleInputRoom = useCallback((e: SelectChangeEvent) => {
+  const [room, setRoomSelected] = useState<string>('');//room selected
+  const [tenantSelected,setTenantSelected] = useState<Tenant[]>()
+
+  //computation for electric
+  const [past,setPast] = useState<number>(0)
+  const [present,setPresent] = useState<number>(0)
+  const [usage,setUsage] = useState<number>(0)
+  const [rate,setRate] = useState<number>(0)
+  const [tax,setTax] = useState<number>(0)
+  const [total,setTotal] = useState<number>(0)
+  const [totalFinal,setTotalFinal] = useState<number>(0)
+
+  useEffect(()=> setUsage(Math.abs(past - present)) ,[past,present])
+  useEffect(()=> setTotal(Math.round(((usage * rate) + tax))),[usage,rate,tax,count])
+  useEffect(()=> setTotalFinal(Math.round(total / count)),[total, count])
+  useEffect(()=>{
+    db.storage.get('rate').then((rate)=> setRate(rate?.value))
+    db.storage.get('tax').then((tax)=> setTax(tax?.value))
+  },[])
+
+  const handleInputRoom = useCallback(async (e: SelectChangeEvent) => {
     const room: string = e.target.value as string
+
+    const tenant = tenants?.filter(tenant => tenant.room?.includes(room))
+    setTenantSelected(tenant)
+
     setRoomSelected(room)
     setCount(personCount[room])
+    setPast((await db.storage.get(room))?.value)
+    setPresent(0)
+    setUsage(0)
+    setTotal(0)
+    setTotalFinal(0)
   },[rooms])
 
   useEffect(()=>{
-    if(tenants){
-      const rooms = ['ROOM N1','ROOM N2','ROOM N3','ROOM N4','ROOM N5','ROOM N6','ROOM N7','ROOM N8','ROOM N9&10','ROOM N11','ROOM N12','ROOM N13','ROOM N14']
-      const room: string[] = [];
-      const roomCount: {[room: string]: number} = {}
-      tenants?.map(result => {
-        if (result?.room) {
-          room.push(result.room);
-        }
-
-        if(result?.room && roomCount[result.room]){
-          roomCount[result.room]++
-        }else{
+    (async ()=>{
+      if(tenants){
+        const rooms: [] = (await db.storage.get('rooms'))?.value
+        const room: string[] = [];
+        const roomCount: {[room: string]: number} = {}
+        tenants?.map(result => {
           if (result?.room) {
-            roomCount[result.room] = 1;
+            room.push(result.room);
           }
-        }
-      })
-      setRooms(rooms.filter(r => Array.from(new Set(room)).includes(r)))
-      setPersonCount(roomCount)
-    }
+  
+          if(result?.room && roomCount[result.room]){
+            roomCount[result.room]++
+          }else{
+            if (result?.room) {
+              roomCount[result.room] = 1;
+            }
+          }
+        })
+        setRooms(rooms.filter(r => Array.from(new Set(room)).includes(r)))
+        setPersonCount(roomCount)
+      }
+    })()
   },[tenants])
-
-  useEffect(()=>{
-    db.open()
-  },[])
   
   useEffect(()=>{
     db.storage.get('rent').then(result => setRentAmount(result?.value))
@@ -110,25 +130,21 @@ const BillingAndPayments: React.FC = () => {
   const [isWaterShow,setIsWaterShow] = useState<boolean>(true)
   const [isElectricShow,setIsElectricShow] = useState<boolean>(true)
 
-  //computation for electric
-  const [past,setPast] = useState<number>(0)
-  const [present,setPresent] = useState<number>(0)
-  const [usage,setUsage] = useState<number>(0)
-  const [rate,setRate] = useState<number>(0)
-  const [tax,setTax] = useState<number>(0)
-  const [total,setTotal] = useState<number>(0)
-
-  useEffect(()=> setUsage(Math.abs(past - present)) ,[past,present])
-  useEffect(()=> setTotal(Math.round(((usage * rate) + tax))),[usage,rate,tax,count])
-  useEffect(()=>{
-    db.storage.get('rate').then((rate)=> setRate(rate?.value))
-    db.storage.get('tax').then((tax)=> setTax(tax?.value))
-  },[])
-
-
-  const handleElecticAmount = useCallback(()=>{
+  const handleElecticAmount = useCallback(async ()=>{
     
-  },[past,present])
+    if(past > 0 && present > 0){
+      await db.storage.update(room, { value: Number(present) })
+      await db.storage.update('rate',{ value: rate })
+      await db.storage.update('tax',{ value: tax })
+
+      const dateNow: string = new Date().toLocaleDateString()
+      tenantSelected?.map( async (tenant) => {
+        console.log(totalFinal)
+        const electric = tenant.electric_bills ? [...tenant.electric_bills, {amount: totalFinal, date: dateNow}] : [{amount: totalFinal, date: dateNow}]
+        await db.tenants.update(tenant.id,{electric_bills: electric, balance: (Number(tenant.balance) + Number(totalFinal))})
+      })
+    }
+  },[past,present,tax,rate])
 
   return (
     <Box className='flex flex-col gap-2 m-2 h-full overflow-auto'>
@@ -144,7 +160,7 @@ const BillingAndPayments: React.FC = () => {
               <Box className='text-center font-semibold'>This change has not affected the past amount of rent. Change approve!</Box>
             )}
             <IonInput value={rentAmount} onIonInput={handleRentInput} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Amount" />
-            <Button onClick={handleRentAmount} startIcon={<DoneAllRoundedIcon/>} variant='contained' fullWidth>confirm</Button>
+            <Button onClick={handleRentAmount} startIcon={<DoneAllRoundedIcon/>} variant='contained' fullWidth>distribute</Button>
           </Box>
         </Paper>
       )}
@@ -165,7 +181,7 @@ const BillingAndPayments: React.FC = () => {
               { isWaterMSGShow && (
                 <Button onClick={() => {setIsWaterMSGShow(false); setISWaterBillApprove(false)}} variant='contained' >cancel</Button>
               )}
-              <Button onClick={handleWaterAmount} startIcon={isWaterBillApprove ? <DoneAllRoundedIcon/> : <CheckRoundedIcon/>} variant='contained' fullWidth={!isWaterMSGShow}>confirm</Button>
+              <Button onClick={handleWaterAmount} startIcon={isWaterBillApprove ? <DoneAllRoundedIcon/> : <CheckRoundedIcon/>} variant='contained' fullWidth={!isWaterMSGShow}>distribute</Button>
             </Box>
           </Box>
         </Paper>
@@ -190,8 +206,8 @@ const BillingAndPayments: React.FC = () => {
               </Select>
             </FormControl>
             <Box className='flex flex-row gap-4'>
-              <IonInput value={count} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Person Count"/>
-              <IonInput value={total} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Total Amount" />
+              <IonInput value={count} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Of Head"/>
+              <IonInput value={totalFinal} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Individual (Round Off)" />
             </Box>
             <Box className='flex flex-row gap-4'>
               <IonInput value={usage} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Usage" />
@@ -200,7 +216,7 @@ const BillingAndPayments: React.FC = () => {
             </Box>
             <IonInput value={past} onIonInput={(e:any)=> setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />
             <IonInput value={present} onIonInput={(e:any)=> setPresent(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Present" />
-            <Button onClick={handleElecticAmount} startIcon={<DoneAllRoundedIcon/>} variant='contained' fullWidth>confirm</Button>
+            <Button onClick={handleElecticAmount} startIcon={<DoneAllRoundedIcon/>} variant='contained' fullWidth>distribute</Button>
           </Box>
         </Paper>
       )}
