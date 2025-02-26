@@ -1,60 +1,66 @@
-import { useEffect, useState } from 'react'
-import { Box, Button, SvgIcon } from '@mui/material'
-import { PieChart } from '@mui/x-charts'
+import { useEffect, useState, useCallback } from 'react'
+import { Box, Button, SvgIcon} from '@mui/material'
 import db, { useLiveQuery } from '../backend/db'
+import { useIonRouter } from '@ionic/react'
 
 import logo from '../assets/logo.png'
-
-//icon
 import { FaHouseChimneyUser } from "react-icons/fa6";
-import { MdBedroomParent } from "react-icons/md";
+import { MdPayments } from "react-icons/md";
 
 const Dashboard: React.FC = () => {
   const tenants = useLiveQuery(()=> db.tenants.toArray())
+
+  const router = useIonRouter()
+  const GoTo = useCallback((address:string)=>{
+      router.push(address)
+  },[router])
+
   const [roomCount,setRoomCount] = useState<number>(0)
+  const [roomAvailable,setRoomAvailable] = useState<number>(0)
   useEffect(()=>{
     (async ()=>{
-      setRoomCount((await db.storage.get('rooms'))?.value.length)
+      const count = await db.storage.get('rooms')
+      setRoomCount(count?.value.length)
     })()
   },[])
+
   return (
-    <Box>
-      <Box className='border border-blue-500 rounded-xl m-4 p-2'>
-        <PieChart
-          series={[
-            {
-              data: [{value: tenants?.length ?? 0},{value: roomCount}, {value: (roomCount * 4)}],
-              innerRadius: 30,
-              outerRadius: 100,
-              paddingAngle: 5,
-              cornerRadius: 5,
-              startAngle: -45,
-              endAngle: 225,
-              cx: 170,
-              cy: 170,
-            }
-          ]}
-        />
-        
-      </Box>
-      <Box className='flex flex-row gap-4 m-4 text-black'>
-        <Box className='w-full p-2 bg-white rounded-xl grid grid-cols-3 gap-2'>
-          <Box className='col-span-1 flex items-center justify-center'>
-            <FaHouseChimneyUser className='size-10'/>
-          </Box>
-          <Box className='col-span-2'>
-            <Box className='font-bold text-xl'>Tenants</Box>
-            <Box>Head Count: {tenants?.length}</Box>
-          </Box>
+    <Box className='overflow-auto p-4'>
+      <Box className='rounded-2xl p-4 flex flex-col gap-2 mb-10'>
+        <Box className='flex justify-center m-4'> 
+          <img src={logo} className='' width={200} height={200}/>
         </Box>
-        <Box className='w-full p-2 bg-white rounded-xl grid grid-cols-3 gap-2'>
-          <Box className='col-span-1 flex items-center justify-center'>
-            <MdBedroomParent className='size-10'/>
+        <Box className='flex flex-row gap-2'>
+          <Box className='flex justify-center w-full'>
+            <Box className='flex flex-col gap-2'>
+              <Box className='flex justify-center font-bold'>{tenants?.length}</Box>
+              <Box className='flex justify-center'>Tenants</Box>
+            </Box>
           </Box>
-          <Box className='col-span-2'>
-            <Box className='font-bold text-xl'>Bed Rooms</Box>
-            <Box>Total: {(roomCount * 4)}</Box>
+          <Box className='flex justify-center w-full'>
+            <Box className='flex flex-col gap-2'>
+              <Box className='flex justify-center font-bold'>{roomCount}</Box>
+              <Box className='flex justify-center'>Rooms</Box>
+            </Box>
           </Box>
+          
+        </Box>
+      </Box>
+      <Box className='grid grid-cols-3 m-2 mb-5'>
+        <Box className='col-span-2 text-3xl font-bold'>LYN BORDING HOUSE</Box>
+      </Box>
+      <Box className='flex flex-rows gap-4'>
+        <Box onClick={()=>{GoTo('/tenants')}} className='grid grid-cols-3 gap-4 w-full bg-slate-300 text-black rounded-2xl p-4 shadow-md'>
+          <Box className='col-span-1 flex justify-center items-center'>
+            <FaHouseChimneyUser className='size-8'/>
+          </Box>
+          <Box className='col-span-2 font-semibold'>Tenants</Box>
+        </Box>
+        <Box onClick={()=>{GoTo('/payments')}} className='grid grid-cols-3 gap-4 w-full bg-slate-300 text-black rounded-2xl p-4 shadow-md'>
+          <Box className='col-span-1 flex justify-center items-center'>
+            <MdPayments className='size-10'/>
+          </Box>
+          <Box className='col-span-2 font-semibold'>Billing & Payments</Box>
         </Box>
       </Box>
     </Box>
