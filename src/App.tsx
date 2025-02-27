@@ -43,6 +43,8 @@ import {Button,SvgIcon} from '@mui/material'
 import Tenants from './pages/Tenants';
 import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
+import { useEffect } from 'react'
+import db, { useLiveQuery } from './backend/db'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -52,6 +54,26 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 
 const App: React.FC = () => {
 
+  useEffect(()=>{
+
+    (async ()=>{
+      const tenants = await db.tenants.toArray()
+      const dateNow: string = new Date().toLocaleDateString()
+      tenants?.map(async (tenant) => {
+        if (tenant.id !== undefined && tenant.balance !== undefined) {
+          const rentH = (await db.history.get(tenant.id))?.bills?.filter(bill => bill.label === 'rent')
+          const rentB = tenant.rent_bills
+
+          //add rent payment if not exists in history andrent bill
+          if(!rentH?.find(date => date.start_date === dateNow) && !rentB?.find(date => date.date === dateNow)){
+            const rentCost = 1000
+            const rent = tenant.rent_bills ? [...(tenant.rent_bills || []), { amount: rentCost, date: dateNow }] : [{ amount: rentCost, date: dateNow }]
+            await db.tenants.update(tenant.id,{rent_bills: rent,balance: (tenant.balance + rentCost)})
+          } 
+      }
+    })
+    })()
+  },[])
 
   return (
     <IonReactRouter>

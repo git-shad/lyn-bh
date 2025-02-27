@@ -17,6 +17,11 @@ import { IoCalendarOutline } from "react-icons/io5";
 import DoneIcon from '@mui/icons-material/Done';
 
 const Profile: React.FC = () => {
+
+  useEffect(()=>{
+    
+  },[])
+
   const router = useIonRouter()
   const GoTo = useCallback((address:string)=>{
     router.push(address)
@@ -274,8 +279,8 @@ const Profile: React.FC = () => {
       { isHidden && (
         <IonList lines='none' className='m-4 flex flex-col'>
           <Box className='font-bold text-2xl my-2'>History List</Box>
-          { history?.bills && history.bills.map(bill => bill.amount !== 0 && bill.start_date !== '' ? (
-            <Box className='flex flex-col border rounded-md p-2'>
+          { history?.bills && history.bills.map((bill,index) => bill.amount !== 0 && bill.start_date !== '' ? (
+            <Box key={index} className='flex flex-col border rounded-md p-2'>
               <Box className='font-bold uppercase '>{bill.label}</Box>
               <Box className='flex flex-col mx-2'>
                 <Box>{formatDate(bill.start_date)}</Box>
@@ -284,7 +289,7 @@ const Profile: React.FC = () => {
               <Box>
                 Paid on:  <span className='font-semibold'>{formatDate(bill.end_date)}</span>
               </Box>
-         </Box>
+            </Box>
           ) : (<></>))}
         </IonList>
       )}

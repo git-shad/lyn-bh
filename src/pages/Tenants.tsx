@@ -12,7 +12,7 @@ import AddIcon from '@mui/icons-material/Add';
 
 const Tenants: React.FC = () => {
   
-  const tenants = useLiveQuery(() => db.tenants.toArray(),[]);
+  const tenants = useLiveQuery(() => db.tenants.toArray());
   const [data, setData] = useState<Tenants>();
 
   useEffect(() => {

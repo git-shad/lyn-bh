@@ -44,7 +44,6 @@ interface Storage{
     value: any
 }
 
-
 const db = new Dexie('tenantDB') as Dexie & {
     tenants: EntityTable<Tenant,'id'>
     history: EntityTable<TenantHistory,'tenant_id'>
@@ -56,11 +55,6 @@ db.version(21).stores({
     history: 'tenant_id,*TenantBills',
     storage: 'key,value'
 })
-
-interface ElectricPast{
-    room: string
-    amount: number
-}
 
 //first run when database are created
 db.on('populate',async ()=>{
