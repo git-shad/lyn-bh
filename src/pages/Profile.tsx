@@ -94,7 +94,7 @@ const Profile: React.FC = () => {
         coin: tenant.coin - data.amount
       })
 
-      history.bills.push({amount: data.amount, start_date: data.date, label: bill, end_date: ''})
+      history.bills.push({label: bill,amount: data.amount, start_date: data.date, end_date: ''})
       const updatedBills = history.bills.map(where => {
         if(where.label === bill && where.start_date === data.date){
           where.amount = data.amount;
@@ -104,7 +104,7 @@ const Profile: React.FC = () => {
         return where;
       });
       
-      await db.history.update(id, { bills: updatedBills });
+      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill)) });
     }else if(bill === 'water' && tenant?.balance && tenant?.coin && history?.bills ){
       if(data.amount > tenant?.coin) return;
       await db.tenants.update(id,{
@@ -113,7 +113,7 @@ const Profile: React.FC = () => {
         coin: tenant.coin - data.amount
       })
       
-      history.bills.push({amount: data.amount, start_date: data.date, label: bill, end_date: ''})
+      history.bills.push({label: bill,amount: data.amount, start_date: data.date, end_date: ''})
       const updatedBills = history.bills.map(where => {
         if(where.label === bill && where.start_date === data.date){
           where.amount = data.amount;
@@ -123,7 +123,7 @@ const Profile: React.FC = () => {
         return where;
       });
       
-      await db.history.update(id, { bills: updatedBills });
+      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill)) });
     }else if(bill === 'electric' && tenant?.balance && tenant?.coin && history?.bills){
       if(data.amount > tenant?.coin) return;
       await db.tenants.update(id,{
@@ -132,7 +132,7 @@ const Profile: React.FC = () => {
         coin: tenant.coin - data.amount
       })
 
-      history.bills.push({amount: data.amount, start_date: data.date, label: bill, end_date: ''})
+      history.bills.push({label: bill,amount: data.amount, start_date: data.date, end_date: ''})
       const updatedBills = history.bills.map(where => {
         if(where.label === bill && where.start_date === data.date){
           where.amount = data.amount;
@@ -142,7 +142,7 @@ const Profile: React.FC = () => {
         return where;
       });
       
-      await db.history.update(id, { bills: updatedBills });
+      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill)) });
     } 
   },[id, tenant, history, dRent, dWater, dElectric])
   
