@@ -7,6 +7,7 @@ import {
 import { Button, IconButton,SvgIcon, Box, Switch, FormControlLabel,Paper} from '@mui/material'
 import { useLocation } from 'react-router-dom'
 import { db, Tenant, RentBill, ElectricBill, WaterBill, TenantHistory, useLiveQuery } from '../backend/db';
+import { format, eachDayOfInterval } from 'date-fns'
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
@@ -18,18 +19,39 @@ import DoneIcon from '@mui/icons-material/Done';
 
 const Profile: React.FC = () => {
 
+  const location = useLocation();
+  const searchParam = new URLSearchParams(location.search)
+  const id:number = Number(searchParam.get('id'))
+
+  //check the start date to current date if the rent bill are paid or not
   useEffect(()=>{
-    
+    (async ()=>{
+      const tenant = await db.tenants.get(id)
+      const dateNow: string = new Date().toLocaleDateString()
+      if(!(tenant?.date && tenant?.balance)) return ;
+
+      const rentCost = 1000
+      const start = new Date(tenant.date)
+      const end = new Date(dateNow)
+      const dateStack: string[] = eachDayOfInterval({start,end}).map(date => format(date,'M/dd/yyyy'))
+      const rentH = (((await db.history.get(id))?.bills?.filter(bill => bill.label === 'rent'))?.filter(date => dateStack.includes(date.start_date)))?.map(date => date.start_date)
+      const rentB = ((tenant.rent_bills)?.filter(date => dateStack.includes(date.date)))?.map(date => date.date)
+      const rentDateBills = (dateStack.filter(date => !rentB?.includes(date)  && !rentH?.includes(date)))?.map(date => ({amount: rentCost, date: date}))
+      console.log(rentDateBills) 
+      if(rentDateBills.length <= 0) return
+      const rent = tenant.rent_bills?.concat(rentDateBills)
+      const filter = Array.from(new Set(rent?.map(date => JSON.stringify(date)))).map(date => JSON.parse(date))
+
+      //finalize
+      await db.tenants.update(id,{rent_bills: filter,balance: tenant.balance + (rentCost * rentDateBills.length )})
+
+    })()
   },[])
 
   const router = useIonRouter()
   const GoTo = useCallback((address:string)=>{
     router.push(address)
   },[router])
-
-  const location = useLocation();
-  const searchParam = new URLSearchParams(location.search)
-  const id:number = Number(searchParam.get('id'))
 
   //dataset
   const [tenant, setTenant] = useState<Tenant>();
@@ -41,13 +63,13 @@ const Profile: React.FC = () => {
   useEffect(() => {
     if (id) {
       (async () => {
-        const result = await db.tenants.get(id);
+        const tenant = await db.tenants.get(id);
         
-        if(result){
-          setTenant(result);
-          setRent(result?.rent_bills)
-          setElectric(result?.electric_bills)
-          setWater(result?.water_bills)
+        if(tenant){
+          setTenant(tenant);
+          setRent(tenant?.rent_bills)
+          setElectric(tenant?.electric_bills)
+          setWater(tenant?.water_bills)
           const historys = await db.history.get(id)
           if(historys){
             setHistory(historys)
@@ -72,7 +94,7 @@ const Profile: React.FC = () => {
         coin: tenant.coin - data.amount
       })
 
-      // history.bills.push({amount: data.amount, start_date: data.date, label: bill, end_date: ''})
+      history.bills.push({amount: data.amount, start_date: data.date, label: bill, end_date: ''})
       const updatedBills = history.bills.map(where => {
         if(where.label === bill && where.start_date === data.date){
           where.amount = data.amount;
@@ -280,7 +302,7 @@ const Profile: React.FC = () => {
         <IonList lines='none' className='m-4 flex flex-col'>
           <Box className='font-bold text-2xl my-2'>History List</Box>
           { history?.bills && history.bills.map((bill,index) => bill.amount !== 0 && bill.start_date !== '' ? (
-            <Box key={index} className='flex flex-col border rounded-md p-2'>
+            <Box key={index} className='flex flex-col border rounded-md p-2 m-2'>
               <Box className='font-bold uppercase '>{bill.label}</Box>
               <Box className='flex flex-col mx-2'>
                 <Box>{formatDate(bill.start_date)}</Box>
