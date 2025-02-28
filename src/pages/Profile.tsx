@@ -16,6 +16,7 @@ import PaidIcon from '@mui/icons-material/Paid';
 import { PiHandCoinsFill } from "react-icons/pi";
 import { IoCalendarOutline } from "react-icons/io5";
 import DoneIcon from '@mui/icons-material/Done';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 
 const Profile: React.FC = () => {
 
@@ -37,14 +38,13 @@ const Profile: React.FC = () => {
       const rentH = (((await db.history.get(id))?.bills?.filter(bill => bill.label === 'rent'))?.filter(date => dateStack.includes(date.start_date)))?.map(date => date.start_date)
       const rentB = ((tenant.rent_bills)?.filter(date => dateStack.includes(date.date)))?.map(date => date.date)
       const rentDateBills = (dateStack.filter(date => !rentB?.includes(date)  && !rentH?.includes(date)))?.map(date => ({amount: rentCost, date: date}))
-      console.log(rentDateBills) 
+      
       if(rentDateBills.length <= 0) return
       const rent = tenant.rent_bills?.concat(rentDateBills)
       const filter = Array.from(new Set(rent?.map(date => JSON.stringify(date)))).map(date => JSON.parse(date))
 
       //finalize
       await db.tenants.update(id,{rent_bills: filter,balance: tenant.balance + (rentCost * rentDateBills.length )})
-
     })()
   },[])
 
@@ -142,18 +142,17 @@ const Profile: React.FC = () => {
         return where;
       });
       
-      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill)) });
+      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill)) }); 
     } 
   },[id, tenant, history, dRent, dWater, dElectric])
   
   const [isAddCoin,setIsAddCoin] = useState<boolean>(false)
-  const [isCalendar,setIsCalendar] = useState<boolean>(false)
   const [inputCoin,setInputCoin] = useState<number>()
   const handleAddCoin = useCallback(async ()=>{
-    if(!tenant?.coin === undefined) return;
+    if((tenant === undefined || tenant?.coin === undefined) || isNaN(Number(inputCoin))) return;
     const sum = (Number(tenant?.coin) + Number(inputCoin))
     await db.tenants.update(id,{coin: sum})
-    setIsAddCoin(false)  
+    setIsAddCoin(false)
     setInputCoin(undefined)
   },[inputCoin,id,tenant])
 
@@ -171,6 +170,18 @@ const Profile: React.FC = () => {
     const year = parseInt(dateParts[2], 10);
     return `${month} ${day}, ${year}`;
   }
+
+  const handleAutoDeduction = useCallback(async ()=>{
+    const electric = dElectric?.map(bill => ({amount: bill.amount, date: bill.date, bill: 'electric'}))
+    const water    = dWater?.map(bill => ({amount: bill.amount, date: bill.date, bill: 'water'}))
+    const rent     = dRent?.map(bill => ({amount: bill.amount, date: bill.date, bill: 'rent'}))
+    const getAllBills = (electric?.concat(water || []))?.concat(rent || [])
+    
+    getAllBills?.map(bill => {
+      
+    })
+
+  },[dRent, dWater, dElectric])
 
   return (
     <IonContent>
@@ -211,24 +222,16 @@ const Profile: React.FC = () => {
         <IonGrid>
         <IonRow>
             { isAddCoin && (
-              <Box className='w-full mt-4 mx-4'>
+              <Box className='w-full shadow-md shadow-slate-900 rounded-lg p-2 '>
                 <IonInput value={inputCoin} onIonInput={handleInputAddCoin} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Add Coin's" />
               </Box>
             )}
-            { isCalendar && (
-              <IonDatetime presentation='date' preferWheel={true}></IonDatetime>
-            )}
           </IonRow>
           <IonRow>
-            <IonCol size='auto'>
-              { !isAddCoin && (
-                <FormControlLabel control={<Switch />} label='Auto Deduction' labelPlacement='bottom'></FormControlLabel>
-              )}
-            </IonCol>
-            <IonCol className='flex justify-end'>
-              <Box>
+            <IonCol className='flex justify-end mt-4'>
+              <Box className='flex flex-row gap-4'>
                 { !isAddCoin && (
-                  <IconButton onClick={()=> setIsCalendar(!isCalendar)} color='primary' sx={{border: '1px solid', borderRadius: '8px',m: 1}}><SvgIcon><IoCalendarOutline/></SvgIcon></IconButton>
+                  <IconButton onClick={handleAutoDeduction} color='primary' sx={{border: '1px solid', borderRadius: '8px',m: 1}}><SvgIcon><AutorenewIcon/></SvgIcon></IconButton>
                 )}
                 <IconButton onClick={()=> setIsAddCoin(!isAddCoin)} color='primary' sx={{border: '1px solid', borderRadius: '8px',m: 1}}><SvgIcon><PiHandCoinsFill/></SvgIcon></IconButton>
                 { isAddCoin && (
