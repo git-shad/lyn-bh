@@ -8,6 +8,7 @@ import { Button, IconButton, SvgIcon, Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import { db, Tenant, RentBill, ElectricBill, WaterBill, TenantHistory } from '../backend/db';
 import { format, eachDayOfInterval } from 'date-fns';
+import EditTenant from '../components/EditTenant';
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
@@ -25,6 +26,7 @@ const Profile: React.FC = () => {
   const id: number = Number(searchParam.get('id'));
 
   useEffect(() => {
+    //Fill rent dates that have no history but have not been paid
     (async () => {
       const tenant = await db.tenants.get(id);
       const dateNow: string = new Date().toLocaleDateString();
@@ -41,7 +43,7 @@ const Profile: React.FC = () => {
       if (rentDateBills.length <= 0) return;
       const rent = tenant.rent_bills?.concat(rentDateBills);
       const filter = Array.from(new Set(rent?.map(date => JSON.stringify(date)))).map(date => JSON.parse(date));
-
+      
       //finalize
       await db.tenants.update(id, { rent_bills: filter, balance: tenant.balance + (rentCost * rentDateBills.length) });
     })();
@@ -164,6 +166,11 @@ const Profile: React.FC = () => {
     }
   }, [dElectric, dWater, dRent, handleDataBills]);
 
+  const [open, setOpen] = useState(false);
+  const handleOpen = useCallback(() => {
+    setOpen(prev => !prev);
+  }, []);
+
   return (
     <IonContent>
       <IonItem lines='none'>
@@ -174,10 +181,7 @@ const Profile: React.FC = () => {
       </IonItem>
       <Box className='m-4'>
         <Box className='w-full' >
-          <IonGrid className='border border-blue-500 rounded-xl'>
-            <IonRow>
-              <IconButton onClick={handleAddCoin} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
-            </IonRow>
+          <IonGrid className='border border-blue-500 rounded-xl p-4'>
             <IonRow className='m-2 mb-10 w-full flex justify-center'>
               <Box className='flex-col text-center'>
                 <Box className='font-bold text-3xl'>{tenant?.name}</Box>
@@ -212,8 +216,9 @@ const Profile: React.FC = () => {
             )}
           </IonRow>
           <IonRow>
-            <IonCol className='flex justify-end mt-4'>
-              <Box className='flex flex-row gap-4'>
+            <IonCol className='flex justify-end mt-2'>
+              <Box className='flex flex-row gap-2'>
+                <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
                 {!isAddCoin && (
                   <IconButton onClick={handleAutoDeduction} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><AutorenewIcon /></SvgIcon></IconButton>
                 )}
@@ -301,6 +306,7 @@ const Profile: React.FC = () => {
           ) : (<></>))}
         </IonList>
       )}
+      <EditTenant open={open} onClose={handleOpen} id={id}/>
     </IonContent>
   );
 }

@@ -1,10 +1,11 @@
 import { useState,useEffect,useCallback } from 'react'
 import { 
   Paper, Box, SvgIcon, Button,IconButton,
-  InputLabel,FormControl,MenuItem,Select, SelectChangeEvent
+  InputLabel,FormControl,MenuItem,Select, Alert, SelectChangeEvent
  } from '@mui/material'
 import { IonInput,IonFab,IonFabButton,IonFabList,IonContent } from '@ionic/react'
 import db, { useLiveQuery, Tenant } from '../backend/db'
+import ETable, { type TableData } from '../components/ETable'
 
 //icons
 import { IoHome } from "react-icons/io5";
@@ -24,6 +25,7 @@ const BillingAndPayments: React.FC = () => {
   const [rooms,setRooms] = useState<string[]>([])
   const [room, setRoomSelected] = useState<string>('');//room selected
   const [tenantSelected,setTenantSelected] = useState<Tenant[]>()
+  const [roomList,setRoomList] = useState<string[]>()
 
   //computation for electric
   const [past,setPast] = useState<number>(0)
@@ -45,9 +47,10 @@ const BillingAndPayments: React.FC = () => {
   //run when changing the room
   const handleInputRoom = useCallback(async (e: SelectChangeEvent) => {
     const room: string = e.target.value as string
-
+ 
     const tenant = tenants?.filter(tenant => tenant.room?.includes(room))
     setTenantSelected(tenant)
+    
     
     setRoomSelected(room)
     setCount(personCount[room])
@@ -57,6 +60,14 @@ const BillingAndPayments: React.FC = () => {
     setTotal(0)
     setTotalFinal(0)
   },[personCount])
+
+  //select room first
+  useEffect(()=>{
+    if(rooms.length > 0){
+      const e = { target: { value: rooms[0] } } as SelectChangeEvent;
+      handleInputRoom(e)
+    }
+  },[rooms])
 
   useEffect(()=>{
     (async ()=>{
@@ -109,14 +120,15 @@ const BillingAndPayments: React.FC = () => {
   const [waterAmount,setWaterAmount] = useState<number>(0)
   const [isWaterShow,setIsWaterShow] = useState<boolean>(true)
   const [isWaterBillApprove,setISWaterBillApprove] = useState<boolean>(false)
-  const [isWaterMSGShow,setIsWaterMSGShow] = useState<boolean>(false)
+  const [isWaterBillhow,setIsWaterBillShow] = useState<boolean>(false)
+  const [isWatterMsgShow, setIsWaterMsgShow] = useState<boolean>(false)
   const handleWaterInput = useCallback((e: any)=>{
     setWaterAmount(e?.detail.value)
   },[])
 
   const handleWaterAmount = useCallback(()=>{
     setISWaterBillApprove(true)
-    setIsWaterMSGShow(true)
+    setIsWaterBillShow(true)
     if(isWaterBillApprove === false) return;
 
     const divide: number = tenants ? (waterAmount / tenants.length) : 0
@@ -129,13 +141,20 @@ const BillingAndPayments: React.FC = () => {
     })
     setWaterAmount(0)
     setISWaterBillApprove(false)
-    setIsWaterMSGShow(false)
+
+    setIsWaterBillShow(true)
+    setIsWaterBillShow(false)
+    setIsWaterMsgShow(true)
+    setTimeout(()=>{
+      setIsWaterMsgShow(false)
+    },5000)
   },[isWaterBillApprove,waterAmount,tenants])
   //end
 
   //Electric
   const [isElectricShow,setIsElectricShow] = useState<boolean>(true)
   const [isElectricBillApprove,setIsElectricBillApprove] = useState<boolean>(false)
+  const [isElectricMsgShow, setIsElectricMsgShow] = useState<boolean>(false)
   const handleElecticAmount = useCallback(async ()=>{
     
     if(past > 0 && present > 0 && isElectricBillApprove){
@@ -148,10 +167,17 @@ const BillingAndPayments: React.FC = () => {
         const electric = tenant.electric_bills ? [...tenant.electric_bills, {amount: totalFinal, date: dateNow}] : [{amount: totalFinal, date: dateNow}]
         await db.tenants.update(tenant.id,{electric_bills: electric, balance: (Number(tenant.balance) + Number(totalFinal))})
       })
+
+      setIsElectricMsgShow(true)
+      setTimeout(()=>{
+        setIsElectricMsgShow(false)
+      },5000)
     }else{
       setIsElectricBillApprove(true)
     }
   },[past,present,tax,rate,isElectricBillApprove])
+
+  const [tdata, setTData] = useState<TableData[]>()
 
   return (
     <Box className='flex flex-col gap-2 m-2 h-full overflow-auto'>
@@ -164,8 +190,8 @@ const BillingAndPayments: React.FC = () => {
           </Box>
           <Box className='flex flex-col gap-2'>
             { isRentMSGShow && (
-              <Box className='text-center font-semibold'>This change has not affected the past amount of rent. Change approve!</Box>
-            )}
+              <Alert severity='success'>This change has not affected the past amount of rent. Change approve!</Alert>
+            )}  
             <IonInput value={rentAmount} onIonInput={handleRentInput} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Amount" />
             <Button onClick={handleRentAmount} startIcon={<DoneAllRoundedIcon/>} variant='contained' fullWidth>distribute</Button>
           </Box>
@@ -180,13 +206,14 @@ const BillingAndPayments: React.FC = () => {
             <Box className='ml-auto'><IconButton onClick={()=> setIsWaterShow(!isWaterShow)}><CloseIcon/></IconButton></Box>
           </Box>
           <Box className='flex flex-col gap-2'>
-            { isWaterMSGShow && (
-              <Box className='text-center font-semibold'>The second click divides the amount of the water bill for all tenants.</Box>
+            { isWatterMsgShow && (
+              <Alert severity='success'>Divides the amount of the water bill for all tenants.</Alert>
             )}
-            <IonInput value={waterAmount !== 0? waterAmount : undefined} onIonInput={handleWaterInput} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Amount" disabled={isWaterMSGShow}/>
+
+            <IonInput value={waterAmount !== 0? waterAmount : undefined} onIonInput={handleWaterInput} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Amount" disabled={isWaterBillhow}/>
             <Box className='flex flex-row gap-2 justify-end'>
-              { isWaterMSGShow && (
-                <Button onClick={() => {setIsWaterMSGShow(false); setISWaterBillApprove(false)}} variant='contained' fullWidth>cancel</Button>
+              { isWaterBillhow && (
+                <Button onClick={() => {setIsWaterBillShow(false); setISWaterBillApprove(false)}} variant='contained' fullWidth>cancel</Button>
               )}
               <Button onClick={handleWaterAmount} startIcon={isWaterBillApprove ? <DoneAllRoundedIcon/> : <CheckRoundedIcon/>} variant='contained' fullWidth>distribute</Button>
             </Box>
@@ -223,6 +250,9 @@ const BillingAndPayments: React.FC = () => {
             </Box>
             <IonInput value={past} onIonInput={(e:any)=> setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />
             <IonInput value={present} onIonInput={(e:any)=> setPresent(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Present" />
+            { isElectricMsgShow && (
+              <Alert severity='success'>Distribute the {totalFinal} to every tenant.</Alert>
+            )}
             <Box className='flex flex-row gap-2 justify-end'>
               { isElectricBillApprove && (
                 <Button onClick={() => {setIsElectricBillApprove(false)}} variant='contained' fullWidth>cancel</Button>
