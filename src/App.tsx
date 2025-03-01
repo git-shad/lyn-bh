@@ -68,6 +68,8 @@ const App: React.FC = () => {
           if(!rentH?.find(date => date.start_date === dateNow) && !rentB?.find(date => date.date === dateNow)){
             const rentCost = 1000
             const rent = tenant.rent_bills ? [...(tenant.rent_bills || []), { amount: rentCost, date: dateNow }] : [{ amount: rentCost, date: dateNow }]
+            const single = Array.from(new Set(rent?.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill))
+            console.log(single)
             await db.tenants.update(tenant.id,{rent_bills: rent,balance: (tenant.balance + rentCost)})
           } 
       }
