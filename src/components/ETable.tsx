@@ -1,9 +1,10 @@
 import { FC } from 'react'
 import { 
-    Table ,TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Dialog, DialogTitle,DialogContent, DialogActions
+    Table ,TableBody, TableCell, TableHead, TableRow,
+    Dialog, DialogTitle,DialogContent, DialogActions,
+    Button
  } from '@mui/material'
-
+ import html2canvas from 'html2canvas'
 
 interface TableData{
     room: string
@@ -26,11 +27,23 @@ interface TableDataRow{
 }
 
 const ETable: FC<TableDataRow> = ({ row, open, onClose }) => {
+    const saveAsPng = () => {
+        const element = document.getElementById('ElectricBillsTable'); // Replace with your parent component's ID
+        if (element) {
+          html2canvas(element).then((canvas) => {
+            const link = document.createElement('a');
+            link.download = 'RoomElectricBills.png';
+            link.href = canvas.toDataURL();
+            link.click();
+          });
+        }
+    };
+      
     return (
     <Dialog open={open} onClose={onClose}>
         <DialogTitle>Electric Bill Distribute</DialogTitle>
         <DialogContent>
-            <Table>
+            <Table id='ElectricBillsTable'>
                 <TableHead>
                     <TableRow>
                         <TableCell style={{ minWidth: 100 }}>Room</TableCell>
@@ -66,6 +79,8 @@ const ETable: FC<TableDataRow> = ({ row, open, onClose }) => {
             </Table>
         </DialogContent>
         <DialogActions className='flex flex-row gap-2'>
+            <Button onClick={onClose}>Close</Button>
+            <Button onClick={saveAsPng}>Download</Button>
         </DialogActions>
     </Dialog>
     );

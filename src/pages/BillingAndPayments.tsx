@@ -1,7 +1,8 @@
 import { useState,useEffect,useCallback } from 'react'
 import { 
   Paper, Box, SvgIcon, Button,IconButton,
-  InputLabel,FormControl,MenuItem,Select, Alert, SelectChangeEvent
+  InputLabel,FormControl,MenuItem,Select, Alert, SelectChangeEvent,
+  TableRow
  } from '@mui/material'
 import { IonInput,IonFab,IonFabButton,IonFabList,IonContent } from '@ionic/react'
 import db, { useLiveQuery, Tenant } from '../backend/db'
@@ -65,7 +66,8 @@ const BillingAndPayments: React.FC = () => {
   //select room first
   useEffect(()=>{
     if(rooms.length > 0){
-      const e = { target: { value: rooms[0] } } as SelectChangeEvent;
+      let roomSwitch = rooms.findIndex((_) => _ === room)
+      const e = { target: { value: rooms[roomSwitch + 1] ? rooms[roomSwitch + 1] : rooms[0] } } as SelectChangeEvent;
       handleInputRoom(e)
     }
   },[rooms])
@@ -172,17 +174,35 @@ const BillingAndPayments: React.FC = () => {
         const electric = tenant.electric_bills ? [...tenant.electric_bills, {amount: totalFinal, date: dateNow}] : [{amount: totalFinal, date: dateNow}]
         await db.tenants.update(tenant.id,{electric_bills: electric, balance: (Number(tenant.balance) + Number(totalFinal))})
       })
-
-      
-
       setIsElectricMsgShow(true)
+
+      const tableRow: TableData = {
+        room: room,
+        past: past,
+        present: present,
+        usage: usage,
+        rate: rate,
+        tax: tax, 
+        total: total,
+        roundOff: ((usage * rate) + tax),
+        ofHead: count,
+        individual: (total / count),
+        roundOffFinal: totalFinal 
+      };
+
+      setTData((tdata) => {
+        tdata = tdata.filter(data => data.room !== room)
+        tdata = tdata ? [...tdata, tableRow] : [tableRow]
+        return tdata
+      })
+
       setTimeout(()=>{
         setIsElectricMsgShow(false)
       },5000)
     }else{
       setIsElectricBillApprove(true)
     }
-  },[past,present,tax,rate,isElectricBillApprove])
+  },[past,present,tax,rate,isElectricBillApprove,room,tenantSelected,totalFinal,count,usage,total])
 
   const handleOpen = useCallback(() => {
      setOpen(prev => !prev);
@@ -265,7 +285,7 @@ const BillingAndPayments: React.FC = () => {
             <IonInput value={past} onIonInput={(e:any)=> setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />
             <IonInput value={present} onIonInput={(e:any)=> setPresent(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Present" />
             { isElectricMsgShow && (
-              <Alert severity='success'>Distribute the {totalFinal} to every tenant.</Alert>
+              <Alert severity='success'>Distribute to every tenant. </Alert>
             )}
             <Box className='flex flex-row gap-2 justify-end'>
               { isElectricBillApprove && (
