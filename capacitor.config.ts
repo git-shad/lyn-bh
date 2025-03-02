@@ -10,7 +10,12 @@ const config: CapacitorConfig = {
           keystorePath: '/home/ishad/project/lyn-bh/lynbh-release-key.jks',
           keystoreAlias: 'lynbh',
        }
-    }
+    },
+    plugins: {
+      Keyboard: {
+        resize: 'body',
+      },
+    },
   };
 
 export default config;

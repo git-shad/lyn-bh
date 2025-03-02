@@ -4,7 +4,8 @@ import {
     Dialog, DialogTitle,DialogContent, DialogActions,
     Button
  } from '@mui/material'
- import html2canvas from 'html2canvas'
+//  import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+//  import html2canvas from 'html2canvas'
 
 interface TableData{
     room: string
@@ -27,17 +28,24 @@ interface TableDataRow{
 }
 
 const ETable: FC<TableDataRow> = ({ row, open, onClose }) => {
-    const saveAsPng = () => {
-        const element = document.getElementById('ElectricBillsTable'); // Replace with your parent component's ID
-        if (element) {
-          html2canvas(element).then((canvas) => {
-            const link = document.createElement('a');
-            link.download = 'RoomElectricBills.png';
-            link.href = canvas.toDataURL();
-            link.click();
-          });
-        }
-    };
+    // const saveAsPng = async () => {
+    //     const element = document.getElementById('ElectricBillsTable');
+    //     if (element) {
+    //         const canvas = await html2canvas(element);
+    //         const dataUrl = canvas.toDataURL('image/png');
+    //         const base64Data = dataUrl.split(',')[1];
+            
+    //         await Filesystem.writeFile({
+    //           path: 'ElectricBillsTable.png',
+    //           data: base64Data,
+    //           directory: Directory.Documents,
+    //           encoding: Encoding.UTF8,
+    //         });
+    //         alert('File saved successfully!');
+    //     } else {
+    //         alert('Element not found!');
+    //     }
+    // };
       
     return (
     <Dialog open={open} onClose={onClose}>
@@ -80,7 +88,7 @@ const ETable: FC<TableDataRow> = ({ row, open, onClose }) => {
         </DialogContent>
         <DialogActions className='flex flex-row gap-2'>
             <Button onClick={onClose}>Close</Button>
-            <Button onClick={saveAsPng}>Download</Button>
+            {/* <Button onClick={saveAsPng}>Download</Button> */}
         </DialogActions>
     </Dialog>
     );

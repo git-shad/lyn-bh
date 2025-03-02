@@ -83,7 +83,7 @@ const Profile: React.FC = () => {
     }
   }, [id, tenant]);
 
-  const handleDataBills = useCallback(async (data: { amount: number, date: string }, bill: string, index: number) => {
+  const handleDataBills = async (data: { amount: number, date: string }, bill: string, index: number) => {
     if (!(tenant?.balance && tenant?.coin)) return;
     if (data.amount > tenant.coin) return; // block if amount is greater than coin balance
 
@@ -127,7 +127,7 @@ const Profile: React.FC = () => {
 
     await updateHistory();
     await db.tenants.update(id, { balance: updatedBalance, coin: updatedCoin });
-  }, [id, tenant, history, dRent, dWater, dElectric]);
+  }
 
   const [isAddCoin, setIsAddCoin] = useState<boolean>(false);
   const [inputCoin, setInputCoin] = useState<number>();

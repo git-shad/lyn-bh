@@ -44,7 +44,9 @@ import Tenants from './pages/Tenants';
 import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
 import { useEffect } from 'react'
-import db, { useLiveQuery } from './backend/db'
+import db from './backend/db'
+import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -53,6 +55,12 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 
 
 const App: React.FC = () => {
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      Keyboard.setScroll({ isDisabled: false });
+    }
+  }, []);
 
   useEffect(()=>{
 
@@ -108,7 +116,7 @@ const App: React.FC = () => {
               </Button>
             </IonToolbar>
           </IonHeader>
-          <IonContent>
+          <IonContent scrollY={true}>
           <IonRouterOutlet>
             <Route path="/dashboard" exact component={Dashboard}/>
             <Route path="/" exact render={()=><Redirect to='/dashboard'/>}/>

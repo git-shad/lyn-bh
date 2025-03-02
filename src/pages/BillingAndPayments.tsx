@@ -211,9 +211,9 @@ const BillingAndPayments: React.FC = () => {
 
 
   return (
-    <Box className='flex flex-col gap-2 m-2 h-full overflow-auto'>
+    <Box className='flex flex-col gap-2 p-2 h-full overflow-auto'>
       { isRentShow && (
-        <Paper elevation={5} className='flex flex-col gap-2 p-4'>
+        <Paper elevation={5} className='flex flex-col gap-2 p-4 m-1'>
           <Box className='flex flex-row gap-2'>
             <Box className='text-red-400'><SvgIcon><IoHome/></SvgIcon></Box>
             <Box className='font-bold text-2xl '>Rent</Box>
@@ -230,7 +230,7 @@ const BillingAndPayments: React.FC = () => {
       )}
 
       { isWaterShow && (
-        <Paper elevation={5} className='flex flex-col gap-2 p-4'>
+        <Paper elevation={5} className='flex flex-col gap-2 p-4 m-1'>
           <Box className='flex flex-row gap-2'>
             <Box className='text-blue-400'><SvgIcon><IoWater/></SvgIcon></Box>
             <Box className='font-bold text-2xl '>Water</Box>
@@ -253,7 +253,7 @@ const BillingAndPayments: React.FC = () => {
       )}
 
       { isElectricShow && (
-        <Paper elevation={5} className='flex flex-col gap-2 p-4'>
+        <Paper elevation={5} className='flex flex-col gap-2 p-4 m-1'>
           <Box className='flex flex-row gap-2'>
             <Box className='text-yellow-400'><SvgIcon><IoFlash/></SvgIcon></Box>
             <Box className='font-bold text-2xl '>Electric</Box>
