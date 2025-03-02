@@ -15,6 +15,7 @@ import DoneAllRoundedIcon from '@mui/icons-material/DoneAllRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import TableViewIcon from '@mui/icons-material/TableView';
 
 const BillingAndPayments: React.FC = () => {
   const tenants = useLiveQuery(() => db.tenants.toArray()) 
@@ -69,6 +70,7 @@ const BillingAndPayments: React.FC = () => {
     }
   },[rooms])
 
+  //setup and initialize
   useEffect(()=>{
     (async ()=>{
       if(tenants){
@@ -155,18 +157,23 @@ const BillingAndPayments: React.FC = () => {
   const [isElectricShow,setIsElectricShow] = useState<boolean>(true)
   const [isElectricBillApprove,setIsElectricBillApprove] = useState<boolean>(false)
   const [isElectricMsgShow, setIsElectricMsgShow] = useState<boolean>(false)
-  const handleElecticAmount = useCallback(async ()=>{
-    
+  const [tdata, setTData] = useState<TableData[]>([])
+  const [open, setOpen] = useState(false);
+  const handleElecticAmount = useCallback(async ()=>{    
     if(past > 0 && present > 0 && isElectricBillApprove){
       await db.storage.update(room, { value: Number(present) })
       await db.storage.update('rate',{ value: rate })
       await db.storage.update('tax',{ value: tax })
 
       const dateNow: string = new Date().toLocaleDateString()
+
+      //all tenant in room number are suppy the bill
       tenantSelected?.map( async (tenant) => {
         const electric = tenant.electric_bills ? [...tenant.electric_bills, {amount: totalFinal, date: dateNow}] : [{amount: totalFinal, date: dateNow}]
         await db.tenants.update(tenant.id,{electric_bills: electric, balance: (Number(tenant.balance) + Number(totalFinal))})
       })
+
+      
 
       setIsElectricMsgShow(true)
       setTimeout(()=>{
@@ -177,7 +184,11 @@ const BillingAndPayments: React.FC = () => {
     }
   },[past,present,tax,rate,isElectricBillApprove])
 
-  const [tdata, setTData] = useState<TableData[]>()
+  const handleOpen = useCallback(() => {
+     setOpen(prev => !prev);
+  }, []);
+
+
 
   return (
     <Box className='flex flex-col gap-2 m-2 h-full overflow-auto'>
@@ -228,6 +239,9 @@ const BillingAndPayments: React.FC = () => {
             <Box className='font-bold text-2xl '>Electric</Box>
             <Box className='ml-auto'><IconButton onClick={()=> setIsElectricShow(!isElectricShow)}><CloseIcon/></IconButton></Box>
           </Box>
+          <Box className='flex justify-end'>
+            <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><TableViewIcon/></IconButton>
+          </Box>
           <Box className='flex flex-col gap-4'>
             <FormControl variant='standard' className='w-full m-1'>
               <InputLabel>Tenant Room</InputLabel>
@@ -263,6 +277,7 @@ const BillingAndPayments: React.FC = () => {
         </Paper>
       )}
 
+      <ETable row={tdata || []} open={open} onClose={handleOpen}/>
       <IonFab slot='fixed' vertical='bottom' horizontal='end'>
         <IonFabButton>
           <IconButton color='inherit'><KeyboardArrowUpIcon/></IconButton>
@@ -287,6 +302,8 @@ const BillingAndPayments: React.FC = () => {
           )}
         </IonFabList>
       </IonFab>
+
+
     </Box>
   );
 };

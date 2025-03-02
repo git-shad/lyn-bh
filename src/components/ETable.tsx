@@ -1,5 +1,8 @@
 import { FC } from 'react'
-import { Table ,TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
+import { 
+    Table ,TableBody, TableCell, TableContainer, TableHead, TableRow,
+    Dialog, DialogTitle,DialogContent, DialogActions
+ } from '@mui/material'
 
 
 interface TableData{
@@ -18,28 +21,34 @@ interface TableData{
 
 interface TableDataRow{
     row: TableData[]
+    open: boolean;
+    onClose: () => void;
 }
 
-const ETable: FC<TableDataRow> = ({ row }) => {
+const ETable: FC<TableDataRow> = ({ row, open, onClose }) => {
     return (
-        <TableContainer>
+    <Dialog open={open} onClose={onClose}>
+        <DialogTitle>Electric Bill Distribute</DialogTitle>
+        <DialogContent>
             <Table>
                 <TableHead>
-                    <TableCell>Room</TableCell>
-                    <TableCell>Past</TableCell>
-                    <TableCell>Present</TableCell>
-                    <TableCell>Usage</TableCell>
-                    <TableCell>Rate</TableCell>
-                    <TableCell>Tax</TableCell>
-                    <TableCell>Total</TableCell>
-                    <TableCell>Round Off</TableCell>
-                    <TableCell>Of Head</TableCell>
-                    <TableCell>Individual</TableCell>
-                    <TableCell>Round Off</TableCell>
+                    <TableRow>
+                        <TableCell style={{ minWidth: 100 }}>Room</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Past</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Present</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Usage</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Rate</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Tax</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Total</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Round Off</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Of Head</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Individual</TableCell>
+                        <TableCell style={{ minWidth: 100 }} align="center">Round Off Final</TableCell>
+                    </TableRow>
                 </TableHead>
                 <TableBody>
-                    { row.map((data)=>(
-                        <TableRow>
+                    {row.map((data, index) => (
+                        <TableRow key={index}>
                             <TableCell>{data.room}</TableCell>
                             <TableCell align="right">{data.past}</TableCell>
                             <TableCell align="right">{data.present}</TableCell>
@@ -55,7 +64,10 @@ const ETable: FC<TableDataRow> = ({ row }) => {
                     ))}
                 </TableBody>
             </Table>
-        </TableContainer>
+        </DialogContent>
+        <DialogActions className='flex flex-row gap-2'>
+        </DialogActions>
+    </Dialog>
     );
 
 }
