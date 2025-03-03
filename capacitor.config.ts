@@ -11,11 +11,6 @@ const config: CapacitorConfig = {
           keystoreAlias: 'lynbh',
        }
     },
-    plugins: {
-      Keyboard: {
-        resize: 'body',
-      },
-    },
   };
 
 export default config;

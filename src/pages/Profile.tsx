@@ -83,51 +83,67 @@ const Profile: React.FC = () => {
     }
   }, [id, tenant]);
 
-  const handleDataBills = async (data: { amount: number, date: string }, bill: string, index: number) => {
-    if (!(tenant?.balance && tenant?.coin)) return;
-    if (data.amount > tenant.coin) return; // block if amount is greater than coin balance
+  const handleDataBills = useCallback(async (data: {amount: number, date: string},bill: string, index: number)=>{
+    const currentDate = new Date().toLocaleDateString()
+    if(bill === 'rent' && tenant?.balance && tenant?.coin && history?.bills){
+      if(data.amount > tenant?.coin) return;//block if amount are graterthan or equal to coin balance
+      await db.tenants.update(id,{
+        rent_bills: dRent?.filter((d,i)=> i !== index),
+        balance: tenant.balance - data.amount,
+        coin: tenant.coin - data.amount
+      })
 
-    const currentDate = new Date().toLocaleDateString();
-    const updatedBalance = Math.max(tenant.balance - data.amount, 0);
-    const updatedCoin = Math.max(tenant.coin - data.amount, 0);
-
-    const updateTenantBills = async (billType: string, bills: any[], setBills: React.Dispatch<React.SetStateAction<any[] | undefined>>) => {
-      await db.tenants.update(id, {
-        [`${billType}_bills`]: bills.filter((_, i) => i !== index)
-      });
-      setBills(bills.filter((_, i) => i !== index));
-    };
-
-    const updateHistory = async () => {
-      if (!history?.bills) return;
-
-      const updatedBills = history.bills.map(b => {
-        if (b.label === bill && b.start_date === data.date) {
-          return { ...b, amount: data.amount, end_date: currentDate };
+      history.bills.push({label: bill,amount: data.amount, start_date: data.date, end_date: ''})
+      const updatedBills = history.bills.map(where => {
+        if(where.label === bill && where.start_date === data.date){
+          where.amount = data.amount;
+          where.end_date = currentDate
+          return where
         }
-        return b;
+        return where;
       });
+      
+      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill)) });
+    }else if(bill === 'water' && tenant?.balance && tenant?.coin && history?.bills ){
+      if(data.amount > tenant?.coin) return;
+      await db.tenants.update(id,{
+        water_bills: dWater?.filter((d,i)=> i !== index),
+        balance: tenant.balance - data.amount,
+        coin: tenant.coin - data.amount
+      })
+      
+      history.bills.push({label: bill,amount: data.amount, start_date: data.date, end_date: ''})
+      const updatedBills = history.bills.map(where => {
+        if(where.label === bill && where.start_date === data.date){
+          where.amount = data.amount;
+          where.end_date = currentDate
+          return where
+        }
+        return where;
+      });
+      
+      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill)) });
+    }else if(bill === 'electric' && tenant?.balance && tenant?.coin && history?.bills){
+      if(data.amount > tenant?.coin) return;
+      await db.tenants.update(id,{
+        electric_bills: dElectric?.filter((d,i)=> i !== index),
+        balance: tenant.balance - data.amount,
+        coin: tenant.coin - data.amount
+      })
 
-      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(b => JSON.stringify(b)))).map(b => JSON.parse(b)) });
-    };
-
-    switch (bill) {
-      case 'rent':
-        await updateTenantBills('rent', dRent || [], setRent);
-        break;
-      case 'water':
-        await updateTenantBills('water', dWater || [], setWater);
-        break;
-      case 'electric':
-        await updateTenantBills('electric', dElectric || [], setElectric);
-        break;
-      default:
-        return;
-    }
-
-    await updateHistory();
-    await db.tenants.update(id, { balance: updatedBalance, coin: updatedCoin });
-  }
+      history.bills.push({label: bill,amount: data.amount, start_date: data.date, end_date: ''})
+      const updatedBills = history.bills.map(where => {
+        if(where.label === bill && where.start_date === data.date){
+          where.amount = data.amount;
+          where.end_date = currentDate
+          return where
+        }
+        return where;
+      });
+      
+      await db.history.update(id, { bills: Array.from(new Set(updatedBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill)) });
+    } 
+  },[id, tenant, history, dRent, dWater, dElectric])
 
   const [isAddCoin, setIsAddCoin] = useState<boolean>(false);
   const [inputCoin, setInputCoin] = useState<number>();
@@ -220,7 +236,7 @@ const Profile: React.FC = () => {
               <Box className='flex flex-row gap-2'>
                 <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
                 {!isAddCoin && (
-                  <IconButton onClick={handleAutoDeduction} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><AutorenewIcon /></SvgIcon></IconButton>
+                  <IconButton onClick={handleAutoDeduction} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }} disabled><SvgIcon><AutorenewIcon /></SvgIcon></IconButton>
                 )}
                 <IconButton onClick={() => setIsAddCoin(!isAddCoin)} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><PiHandCoinsFill /></SvgIcon></IconButton>
                 {isAddCoin && (
