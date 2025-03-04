@@ -189,7 +189,7 @@ const Profile: React.FC = () => {
 
   return (
     <IonContent>
-      <IonItem lines='none'>
+      <IonItem lines='none' className='sticky top-0 bg-transparent'>
         <Link to='/tenants'>
           <IconButton slot='start'><KeyboardArrowLeftIcon className='text-blue-500' /></IconButton>
         </Link>
@@ -226,8 +226,8 @@ const Profile: React.FC = () => {
         <IonGrid>
           <IonRow>
             {isAddCoin && (
-              <Box className='w-full shadow-md shadow-slate-900 rounded-lg p-2 '>
-                <IonInput value={inputCoin} onIonInput={handleInputAddCoin} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Add Coin's" />
+              <Box className='w-full shadow-md shadow-slate-900 rounded-lg px-6 bg-blue-100'>
+                <IonInput className='text-black' value={inputCoin} onIonInput={handleInputAddCoin} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Add Coin's" />
               </Box>
             )}
           </IonRow>
@@ -235,8 +235,8 @@ const Profile: React.FC = () => {
             <IonCol className='flex justify-end mt-2'>
               <Box className='flex flex-row gap-2'>
                 <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
-                {!isAddCoin && (
-                  <IconButton onClick={handleAutoDeduction} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }} disabled><SvgIcon><AutorenewIcon /></SvgIcon></IconButton>
+                {!isAddCoin && false && (/* i use the false to hide temporary*/
+                  <IconButton onClick={handleAutoDeduction} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><AutorenewIcon /></SvgIcon></IconButton>
                 )}
                 <IconButton onClick={() => setIsAddCoin(!isAddCoin)} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><PiHandCoinsFill /></SvgIcon></IconButton>
                 {isAddCoin && (

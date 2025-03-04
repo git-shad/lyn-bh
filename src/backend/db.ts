@@ -80,9 +80,12 @@ db.on('populate',async ()=>{
     await db.storage.add({key: 'rent', value: 1000})
     await db.storage.add({key: 'rate', value: 8.5907})
     await db.storage.add({key: 'tax', value: 36.42})
+    await db.storage.add({key: 'show-rent', value: true})
+    await db.storage.add({key: 'show-water', value: true})
+    await db.storage.add({key: 'show-electric', value: true})
     const rooms = ['ROOM N1','ROOM N2','ROOM N3','ROOM N4','ROOM N5','ROOM N6','ROOM N7','ROOM N8','ROOM N9&10','ROOM N11','ROOM N12','ROOM N13','ROOM N14']
     await db.storage.add({key: 'rooms', value: rooms})
-    rooms.map(async (room)=> await db.storage.add({key: room, value: 0}) )
+    rooms.map(async (room)=> await db.storage.add({key: room, value: 0})) 
 })
 
 const rentCost = async () =>{

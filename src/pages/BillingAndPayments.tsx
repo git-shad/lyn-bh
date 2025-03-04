@@ -101,7 +101,7 @@ const BillingAndPayments: React.FC = () => {
   }
 
   //start: rent
-  const [isRentShow, setIsRentShow] = useState<boolean>(true);
+  const [isRentShow, setIsRentShow] = useState<boolean>(false);
   const [isRentMSGShow, setIsRentMSGShow] = useState<boolean>(false);
   const handleRentInput = useCallback((e: any) => {
     setRentAmount(e?.detail.value);
@@ -115,11 +115,26 @@ const BillingAndPayments: React.FC = () => {
       }, 10000);
     });
   }, [rentAmount]);
+
+  const handleIsHideRent = useCallback(()=>{
+    setIsRentShow( hide => {
+      const change = !hide
+      db.storage.update('show-rent',{value: change})
+      return change
+    })
+  },[])
   //end: rent
 
   //start: water
+  const [dateNowW, setDateNowW] = useState<string>('')
+  const [isOpenWCal, setIsOpenWCal] = useState(false)//open and close the date
+
+  const handleNewDateW = useCallback((result: string)=>{
+    setDateNowW(result)
+  },[])
+
   const [waterAmount, setWaterAmount] = useState<number>(0);
-  const [isWaterShow, setIsWaterShow] = useState<boolean>(true);
+  const [isWaterShow, setIsWaterShow] = useState<boolean>(false);
   const [isWaterBillApprove, setISWaterBillApprove] = useState<boolean>(false);
   const [isWaterBillhow, setIsWaterBillShow] = useState<boolean>(false);
   const [isWatterMsgShow, setIsWaterMsgShow] = useState<boolean>(false);
@@ -150,6 +165,14 @@ const BillingAndPayments: React.FC = () => {
       setIsWaterMsgShow(false);
     }, 5000);
   }, [isWaterBillApprove, waterAmount, tenants]);
+
+  const handleIsHideWater = useCallback(()=>{
+    setIsWaterShow( hide => {
+      const change = !hide
+      db.storage.update('show-water',{value: change})
+      return change
+    })
+  },[])
   //end: water
 
   //start: Electric
@@ -160,7 +183,7 @@ const BillingAndPayments: React.FC = () => {
     setDateNowE(result)
   },[])
 
-  const [isElectricShow, setIsElectricShow] = useState<boolean>(true);
+  const [isElectricShow, setIsElectricShow] = useState<boolean>(false);
   const [isElectricBillApprove, setIsElectricBillApprove] = useState<boolean>(false);
   const [isElectricMsgShow, setIsElectricMsgShow] = useState<boolean>(false);
   const [tdata, setTData] = useState<TableData[]>([]);
@@ -206,6 +229,14 @@ const BillingAndPayments: React.FC = () => {
       setIsElectricBillApprove(true);
     }
   }, [past, present, tax, rate, isElectricBillApprove, room, tenantSelected, totalFinal, count, usage, total, dateNowE]);
+
+  const handleIsHideElectric = useCallback(()=>{
+    setIsElectricShow( hide => {
+      const change = !hide
+      db.storage.update('show-electric',{value: change})
+      return change
+    })
+  },[])
   //end: electric
   
   const handleFocus = (e: any) => {
@@ -221,7 +252,12 @@ const BillingAndPayments: React.FC = () => {
   //initial the default
   useEffect(() => {
     db.storage.get('rent').then(result => setRentAmount(result?.value));
-    setDateNowE(new Date().toLocaleDateString())
+    db.storage.get('show-rent').then( result => setIsRentShow(result?.value))
+    db.storage.get('show-electric').then( result => setIsElectricShow(result?.value))
+    db.storage.get('show-water').then( result => setIsWaterShow(result?.value))
+    const date = new Date().toLocaleDateString()
+    setDateNowE(date)
+    setDateNowW(date)    
   }, []);
 
   return (
@@ -232,7 +268,7 @@ const BillingAndPayments: React.FC = () => {
             <Box className='flex flex-row gap-2'>
               <Box className='text-red-400'><SvgIcon><IoHome /></SvgIcon></Box>
               <Box className='font-bold text-2xl '>Rent</Box>
-              <Box className='ml-auto'><IconButton onClick={() => setIsRentShow(!isRentShow)}><CloseIcon /></IconButton></Box>
+              <Box className='ml-auto'><IconButton onClick={handleIsHideRent}><CloseIcon /></IconButton></Box>
             </Box>
             <Box className='flex flex-col gap-2'>
               {isRentMSGShow && (
@@ -246,15 +282,14 @@ const BillingAndPayments: React.FC = () => {
 
         {isWaterShow && (
           <Paper elevation={5} className='flex flex-col gap-2 p-4 m-4'>
-            {/* <MDate open={true}></MDate> */}
             <Box className='flex flex-row gap-2'>
               <Box className='text-blue-400'><SvgIcon><IoWater /></SvgIcon></Box>
               <Box className='font-bold text-2xl '>Water</Box>
-              <Box className='ml-auto'><IconButton onClick={() => setIsWaterShow(!isWaterShow)}><CloseIcon /></IconButton></Box>
+              <Box className='ml-auto'><IconButton onClick={handleIsHideWater}><CloseIcon /></IconButton></Box>
             </Box>
             <Box className=''>
-              <Paper className='p-2 flex justify-center'>
-                <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenECal(!isOpenECal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowE)}</Box></Button>
+              <Paper className='p-2 flex justify-center my-4'>
+                <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenWCal(!isOpenWCal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowW)}</Box></Button>
               </Paper>
             </Box>
             <Box className='flex flex-col gap-2'>
@@ -269,6 +304,7 @@ const BillingAndPayments: React.FC = () => {
                 <Button onClick={handleWaterAmount} startIcon={isWaterBillApprove ? <DoneAllRoundedIcon /> : <CheckRoundedIcon />} variant='contained' fullWidth>distribute</Button>
               </Box>
             </Box>
+            <MDate open={isOpenWCal} onClose={()=> setIsOpenWCal(!isOpenWCal)} result={handleNewDateW}/>
           </Paper>
         )}
 
@@ -277,7 +313,7 @@ const BillingAndPayments: React.FC = () => {
             <Box className='flex flex-row gap-2'>
               <Box className='text-yellow-400'><SvgIcon><IoFlash /></SvgIcon></Box>
               <Box className='font-bold text-2xl '>Electric</Box>
-              <Box className='ml-auto'><IconButton onClick={() => setIsElectricShow(!isElectricShow)}><CloseIcon /></IconButton></Box>
+              <Box className='ml-auto'><IconButton onClick={handleIsHideElectric}><CloseIcon /></IconButton></Box>
             </Box>
             <Box className='flex flex-col gap-2'>
               <Paper className='p-2 flex justify-center'>
@@ -300,17 +336,17 @@ const BillingAndPayments: React.FC = () => {
                   }
                 </Select>
               </FormControl>
+              <IonInput onFocus={handleFocus} value={past} onIonInput={(e: any) => setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />
+              <IonInput onFocus={handleFocus} value={present} onIonInput={(e: any) => setPresent(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Present" />
               <Box className='flex flex-row gap-4'>
-                <IonInput onFocus={handleFocus} value={count} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Of Head" />
-                <IonInput onFocus={handleFocus} value={totalFinal} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Individual (Round Off)" />
-              </Box>
-              <Box className='flex flex-row gap-4'>
-                <IonInput onFocus={handleFocus} value={usage} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Usage" />
                 <IonInput onFocus={handleFocus} value={rate} onIonInput={(e: any) => setRate(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Rate" />
                 <IonInput onFocus={handleFocus} value={tax} onIonInput={(e: any) => setTax(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Tax" />
               </Box>
-              <IonInput onFocus={handleFocus} value={past} onIonInput={(e: any) => setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />
-              <IonInput onFocus={handleFocus} value={present} onIonInput={(e: any) => setPresent(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Present" />
+              <Box className='flex flex-row gap-4'>
+                <IonInput onFocus={handleFocus} value={usage} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Usage" />
+                <IonInput onFocus={handleFocus} value={count} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Of Head" />
+              </Box>
+              <IonInput onFocus={handleFocus} value={totalFinal} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Individual (Round Off)" />
               {isElectricMsgShow && (
                 <Alert severity='success'>Distribute to every tenant.</Alert>
               )}
@@ -333,17 +369,17 @@ const BillingAndPayments: React.FC = () => {
         <IonFabList side='top'>
           {!isElectricShow && (
         <IonFabButton>
-          <IconButton onClick={() => setIsElectricShow(!isElectricShow)} color='inherit'><SvgIcon><IoFlash /></SvgIcon></IconButton>
+          <IconButton onClick={handleIsHideElectric} color='inherit'><SvgIcon><IoFlash /></SvgIcon></IconButton>
         </IonFabButton>
           )}
           {!isWaterShow && (
         <IonFabButton>
-          <IconButton onClick={() => setIsWaterShow(!isWaterShow)} color='inherit'><SvgIcon><IoWater /></SvgIcon></IconButton>
+          <IconButton onClick={handleIsHideWater} color='inherit'><SvgIcon><IoWater /></SvgIcon></IconButton>
         </IonFabButton>
           )}
           {!isRentShow && (
         <IonFabButton>
-          <IconButton onClick={() => setIsRentShow(!isRentShow)} color='inherit'><SvgIcon><IoHome /></SvgIcon></IconButton>
+          <IconButton onClick={handleIsHideRent} color='inherit'><SvgIcon><IoHome /></SvgIcon></IconButton>
         </IonFabButton>
           )}
         </IonFabList>
