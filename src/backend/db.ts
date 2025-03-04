@@ -27,6 +27,20 @@ interface TenantHistory{
     bills?: TenantBills[]
 }
 
+interface TableElectricBillHistory {
+    date: string 
+    room: string
+    past: number
+    present: number
+    usage: number
+    rate: number
+    tax: number
+    total: number
+    roundOff: number
+    ofHead: number
+    individual: number
+    roundOffFinal: number
+}
 interface Tenant {
     id?: number
     name?: string
@@ -48,12 +62,17 @@ const db = new Dexie('tenantDB') as Dexie & {
     tenants: EntityTable<Tenant,'id'>
     history: EntityTable<TenantHistory,'tenant_id'>
     storage: EntityTable<Storage,'key'>
+    hebills: EntityTable<TableElectricBillHistory,'date'>
 }
 
 db.version(21).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills',
     history: 'tenant_id,*TenantBills',
     storage: 'key,value'
+})
+
+db.version(22).stores({
+    hebills: 'date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal'
 })
 
 //first run when database are created
@@ -73,6 +92,6 @@ const rentCost = async () =>{
 }
 
 type Tenants = Tenant[];
-export type { Tenant, Tenants, TenantHistory, RentBill, ElectricBill, WaterBill }
+export type { Tenant, Tenants, TenantHistory, RentBill, ElectricBill, WaterBill, TableElectricBillHistory }
 export { useLiveQuery, db, rentCost}
 export default db;

@@ -260,7 +260,7 @@ const Profile: React.FC = () => {
                 {dRent?.map((data, index) => (
                   <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
                     <Box className='row-span-1'>Amount: <span className='font-semibold'>{data?.amount}</span></Box>
-                    <Box className='row-span-1'>Date: {data?.date}</Box>
+                    <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                     <Box className='row-span-1 flex justify-end'>
                       <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'rent', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
                     </Box>
@@ -277,7 +277,7 @@ const Profile: React.FC = () => {
                 {dWater?.map((data, index) => (
                   <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
                     <Box className='row-span-1'>Amount: <span className='font-semibold'>{data?.amount}</span></Box>
-                    <Box className='row-span-1'>Date: {data?.date}</Box>
+                    <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                     <Box className='row-span-1 flex justify-end'>
                       <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'water', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
                     </Box>
@@ -294,7 +294,7 @@ const Profile: React.FC = () => {
                 {dElectric?.map((data, index) => (
                   <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
                     <Box className='row-span-1'>Amount: <span className='font-semibold'>{data?.amount}</span></Box>
-                    <Box className='row-span-1'>Date: {data?.date}</Box>
+                    <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                     <Box className='row-span-1 flex justify-end'>
                       <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'electric', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
                     </Box>

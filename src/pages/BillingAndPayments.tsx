@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Paper, Box, SvgIcon, Button, IconButton,
-  InputLabel, FormControl, MenuItem, Select, Alert, SelectChangeEvent,
-  TableRow
+  InputLabel, FormControl, MenuItem, Select, Alert, SelectChangeEvent
 } from '@mui/material';
-import { IonInput, IonFab, IonFabButton, IonFabList, IonContent } from '@ionic/react';
+import { IonInput, IonFab, IonFabButton, IonFabList, IonContent} from '@ionic/react';
+import MDate from '../components/MDate'
 import db, { useLiveQuery, Tenant } from '../backend/db';
 import ETable, { type TableData } from '../components/ETable';
 
@@ -15,6 +15,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import TableViewIcon from '@mui/icons-material/TableView';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 const BillingAndPayments: React.FC = () => {
   const tenants = useLiveQuery(() => db.tenants.toArray());
@@ -24,7 +25,6 @@ const BillingAndPayments: React.FC = () => {
   const [rooms, setRooms] = useState<string[]>([]);
   const [room, setRoomSelected] = useState<string>('');
   const [tenantSelected, setTenantSelected] = useState<Tenant[]>();
-  const [roomList, setRoomList] = useState<string[]>();
 
   // computation for electric
   const [past, setPast] = useState<number>(0);
@@ -91,12 +91,16 @@ const BillingAndPayments: React.FC = () => {
     })();
   }, [tenants]);
 
-  // initit the rent state
-  useEffect(() => {
-    db.storage.get('rent').then(result => setRentAmount(result?.value));
-  }, []);
+  function formatDate(date: string) {
+    const dateParts = date.split('/');
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const month = monthNames[parseInt(dateParts[0], 10) - 1];
+    const day = parseInt(dateParts[1], 10);
+    const year = parseInt(dateParts[2], 10);
+    return `${month} ${day}, ${year}`;
+  }
 
-  // rent
+  //start: rent
   const [isRentShow, setIsRentShow] = useState<boolean>(true);
   const [isRentMSGShow, setIsRentMSGShow] = useState<boolean>(false);
   const handleRentInput = useCallback((e: any) => {
@@ -111,8 +115,9 @@ const BillingAndPayments: React.FC = () => {
       }, 10000);
     });
   }, [rentAmount]);
+  //end: rent
 
-  // water
+  //start: water
   const [waterAmount, setWaterAmount] = useState<number>(0);
   const [isWaterShow, setIsWaterShow] = useState<boolean>(true);
   const [isWaterBillApprove, setISWaterBillApprove] = useState<boolean>(false);
@@ -145,8 +150,16 @@ const BillingAndPayments: React.FC = () => {
       setIsWaterMsgShow(false);
     }, 5000);
   }, [isWaterBillApprove, waterAmount, tenants]);
+  //end: water
 
-  // Electric
+  //start: Electric
+  const [dateNowE,setDateNowE] = useState<string>('')
+  const [isOpenECal,setIsOpenECal] = useState(false)//open and close the date
+
+  const handleNewDateE = useCallback((result: string)=>{
+    setDateNowE(result)
+  },[])
+
   const [isElectricShow, setIsElectricShow] = useState<boolean>(true);
   const [isElectricBillApprove, setIsElectricBillApprove] = useState<boolean>(false);
   const [isElectricMsgShow, setIsElectricMsgShow] = useState<boolean>(false);
@@ -157,14 +170,13 @@ const BillingAndPayments: React.FC = () => {
       await db.storage.update(room, { value: Number(present) });
       await db.storage.update('rate', { value: rate });
       await db.storage.update('tax', { value: tax });
-
-      const dateNow: string = new Date().toLocaleDateString();
-
+ 
       // all tenant in room number are suppy the bill
       tenantSelected?.map(async (tenant) => {
-        const electric = tenant.electric_bills ? [...tenant.electric_bills, { amount: totalFinal, date: dateNow }] : [{ amount: totalFinal, date: dateNow }];
+        const electric = tenant.electric_bills ? [...tenant.electric_bills, { amount: totalFinal, date: dateNowE }] : [{ amount: totalFinal, date: dateNowE }];
         await db.tenants.update(tenant.id, { electric_bills: electric, balance: (Number(tenant.balance) + Number(totalFinal)) });
       });
+
       setIsElectricMsgShow(true);
 
       const tableRow: TableData = {
@@ -193,15 +205,24 @@ const BillingAndPayments: React.FC = () => {
     } else {
       setIsElectricBillApprove(true);
     }
-  }, [past, present, tax, rate, isElectricBillApprove, room, tenantSelected, totalFinal, count, usage, total]);
+  }, [past, present, tax, rate, isElectricBillApprove, room, tenantSelected, totalFinal, count, usage, total, dateNowE]);
+  //end: electric
+  
+  const handleFocus = (e: any) => {
+    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
   const handleOpen = useCallback(() => {
     setOpen(prev => !prev);
   }, []);
 
-  const handleFocus = (e: any) => {
-    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
+  
+
+  //initial the default
+  useEffect(() => {
+    db.storage.get('rent').then(result => setRentAmount(result?.value));
+    setDateNowE(new Date().toLocaleDateString())
+  }, []);
 
   return (
     <IonContent scrollY={true}>
@@ -225,10 +246,16 @@ const BillingAndPayments: React.FC = () => {
 
         {isWaterShow && (
           <Paper elevation={5} className='flex flex-col gap-2 p-4 m-4'>
+            {/* <MDate open={true}></MDate> */}
             <Box className='flex flex-row gap-2'>
               <Box className='text-blue-400'><SvgIcon><IoWater /></SvgIcon></Box>
               <Box className='font-bold text-2xl '>Water</Box>
               <Box className='ml-auto'><IconButton onClick={() => setIsWaterShow(!isWaterShow)}><CloseIcon /></IconButton></Box>
+            </Box>
+            <Box className=''>
+              <Paper className='p-2 flex justify-center'>
+                <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenECal(!isOpenECal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowE)}</Box></Button>
+              </Paper>
             </Box>
             <Box className='flex flex-col gap-2'>
               {isWatterMsgShow && (
@@ -252,8 +279,15 @@ const BillingAndPayments: React.FC = () => {
               <Box className='font-bold text-2xl '>Electric</Box>
               <Box className='ml-auto'><IconButton onClick={() => setIsElectricShow(!isElectricShow)}><CloseIcon /></IconButton></Box>
             </Box>
-            <Box className='flex justify-end'>
-              <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><TableViewIcon /></IconButton>
+            <Box className='flex flex-col gap-2'>
+              <Paper className='p-2 flex justify-center'>
+                <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenECal(!isOpenECal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowE)}</Box></Button>
+              </Paper>
+              <Box className='flex justify-end'>
+                <Button onClick={handleOpen} startIcon={<TableViewIcon />} variant='outlined' color='primary' sx={{ borderRadius: '8px', m: 1 }}>
+                  View Table
+                </Button>
+              </Box>
             </Box>
             <Box className='flex flex-col gap-4'>
               <FormControl variant='standard' className='w-full m-1'>
@@ -287,6 +321,7 @@ const BillingAndPayments: React.FC = () => {
                 <Button onClick={handleElecticAmount} startIcon={isElectricBillApprove ? <DoneAllRoundedIcon /> : <CheckRoundedIcon />} variant='contained' fullWidth>distribute</Button>
               </Box>
             </Box>
+            <MDate open={isOpenECal} onClose={()=> setIsOpenECal(!isOpenECal)} result={handleNewDateE}/>
           </Paper>
         )}
       </Box>
