@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { 
   Dialog, DialogTitle, DialogActions, DialogContent, Box, SelectChangeEvent,
-  FormControl,InputLabel,Select,MenuItem,FormHelperText, Button, Alert
+  FormControl,InputLabel,Select,MenuItem,FormHelperText, Button, Alert, IconButton
 } from '@mui/material'
 import { IonInput } from '@ionic/react'
 import db from '../backend/db'
@@ -106,16 +106,20 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
           <Alert severity={alert.severity}>{alert.msg}</Alert>
         )}
       </DialogContent>
-      <DialogActions className='flex flex-row gap-2'>
-        <Button onClick={handleDeleteTenant} color='error' variant='contained' startIcon={<DeleteIcon/>}>Delete</Button>
+      <DialogActions>
+        
         {isDelete ? (
-          <Box className='flex flex-row gap-2'>
+          <Box className='flex flex-row gap-2 w-full'>
+            <Box className='mr-5'>
+              <IconButton onClick={handleDeleteTenant} color='error' sx={{ border: '1px solid', borderRadius: '8px' }}><DeleteIcon/></IconButton>
+            </Box>
             <Button onClick={onClose} variant='outlined'>Close</Button>
             <Button onClick={handleSave} variant='outlined'>Save</Button>
           </Box>
         ) : (
-          <Box>
+          <Box className='flex flex-row gap-2'>
             <Button onClick={handleCancelDeleteTenant} variant='outlined'>cancel</Button>
+            <Button onClick={handleDeleteTenant} color='error' variant='contained' startIcon={<DeleteIcon/>}>Delete</Button>
           </Box>
         )}
       </DialogActions>

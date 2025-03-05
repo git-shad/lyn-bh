@@ -12,7 +12,7 @@ import EditTenant from '../components/EditTenant';
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { flash, home, water } from 'ionicons/icons';
+import { accessibilityOutline, flash, home, water } from 'ionicons/icons';
 import PaidIcon from '@mui/icons-material/Paid';
 import { PiHandCoinsFill } from "react-icons/pi";
 import HistoryIcon from '@mui/icons-material/History';
@@ -26,28 +26,29 @@ const Profile: React.FC = () => {
   const id: number = Number(searchParam.get('id'));
 
   useEffect(() => {
-    //Fill rent dates that have no history but have not been paid
+    // Fill rent dates that have no history but have not been paid
     (async () => {
       const tenant = await db.tenants.get(id);
       const dateNow: string = new Date().toLocaleDateString();
-      if (!(tenant?.date && tenant?.balance)) return;
+      if (!tenant?.date || tenant?.balance === undefined) return;
 
-      const rentCost = 1000;
+      const rentCost = await db.storage.get('rent');
       const start = new Date(tenant.date);
       const end = new Date(dateNow);
       const dateStack: string[] = eachDayOfInterval({ start, end }).map(date => format(date, 'M/d/yyyy'));
-      const rentH = (((await db.history.get(id))?.bills?.filter(bill => bill.label === 'rent'))?.filter(date => dateStack.includes(date.start_date)))?.map(date => date.start_date);
-      const rentB = ((tenant.rent_bills)?.filter(date => dateStack.includes(date.date)))?.map(date => date.date);
-      const rentDateBills = (dateStack.filter(date => !rentB?.includes(date) && !rentH?.includes(date)))?.map(date => ({ amount: rentCost, date: date }));
+      const rentHistory = (await db.history.get(id))?.bills?.filter(bill => bill.label === 'rent').map(bill => bill.start_date) || [];
+      const rentBills = tenant.rent_bills?.map(bill => bill.date) || [];
+      const rentDateBills = dateStack.filter(date => !rentBills.includes(date) && !rentHistory.includes(date)).map(date => ({ amount: rentCost, date }));
 
-      if (rentDateBills.length <= 0) return;
-      const rent = tenant.rent_bills?.concat(rentDateBills);
-      const filter = Array.from(new Set(rent?.map(date => JSON.stringify(date)))).map(date => JSON.parse(date));
-      
-      //finalize
-      await db.tenants.update(id, { rent_bills: filter, balance: tenant.balance + (rentCost * rentDateBills.length) });
+      if (rentDateBills.length === 0 ) return;
+      const updatedRentBills = [...(tenant.rent_bills || []), ...rentDateBills];
+      const uniqueRentBills = Array.from(new Set(updatedRentBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill));
+
+      // Finalize
+      const rentCostValue = rentCost?.value ?? 1000;
+      await db.tenants.update(id, { rent_bills: uniqueRentBills, balance: (Number(tenant.balance) || 0) + (rentCostValue * rentDateBills.length) });
     })();
-  }, []);
+  }, [id]);
 
   const router = useIonRouter();
   const GoTo = useCallback((address: string) => {
@@ -60,28 +61,32 @@ const Profile: React.FC = () => {
   const [dWater, setWater] = useState<WaterBill[]>();
   const [history, setHistory] = useState<TenantHistory>();
 
-  useEffect(() => {
-    if (id) {
-      (async () => {
-        const tenant = await db.tenants.get(id);
 
-        if (tenant) {
-          setTenant(tenant);
-          setRent(tenant?.rent_bills);
-          setElectric(tenant?.electric_bills);
-          setWater(tenant?.water_bills);
-          const historys = await db.history.get(id);
-          if (historys) {
-            setHistory(historys);
-          }
-        } else {
-          GoTo('/tenants');
-        }
-      })();
-    } else {
+  useEffect(() => {
+    if (!id) {
       GoTo('/tenants');
+      return;
     }
-  }, [id, tenant]);
+
+    (async () => {
+      const tenant = await db.tenants.get(id);
+
+      if (!tenant) {
+        GoTo('/tenants');
+        return;
+      }
+
+      setTenant(tenant);
+      setRent(tenant.rent_bills || []);
+      setElectric(tenant.electric_bills || []);
+      setWater(tenant.water_bills || []);
+
+      const historys = await db.history.get(id);
+      if (historys) {
+        setHistory(historys);
+      }
+    })();
+  }, [id, GoTo,tenant]);
 
   const handleDataBills = useCallback(async (data: {amount: number, date: string},bill: string, index: number)=>{
     const currentDate = new Date().toLocaleDateString()
@@ -170,17 +175,20 @@ const Profile: React.FC = () => {
     return `${month} ${day}, ${year}`;
   }
 
-  const handleAutoDeduction = useCallback(async () => {
-    const allBills = [
-      ...(dElectric?.map((bill, index) => ({ ...bill, billType: 'electric', index })) || []),
-      ...(dWater?.map((bill, index) => ({ ...bill, billType: 'water', index })) || []),
-      ...(dRent?.map((bill, index) => ({ ...bill, billType: 'rent', index })) || [])
-    ];
+  // const handleAutoDeduction = useCallback(async () => {
+  //   if (!tenant || !tenant.coin || !tenant.balance) return;
 
-    for (const bill of allBills) {
-      await handleDataBills({ amount: bill.amount, date: bill.date }, bill.billType, bill.index);
-    }
-  }, [dElectric, dWater, dRent, handleDataBills]);
+  //   const allBills = [...(dRent || []), ...(dWater || []), ...(dElectric || [])];
+  //   const sortedBills = allBills.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  //   for (const bill of sortedBills) {
+  //     if (tenant.coin < bill.amount) break;
+
+  //     const billType = dRent?.includes(bill) ? 'rent' : dWater?.includes(bill) ? 'water' : 'electric';
+  //     // await handleDataBills({ amount: bill.amount, date: bill.date }, billType, sortedBills.indexOf(bill));
+  //     console.log(billType)
+  //   }
+  // }, [dRent, dWater, dElectric]);
 
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback(() => {
@@ -235,9 +243,9 @@ const Profile: React.FC = () => {
             <IonCol className='flex justify-end mt-2'>
               <Box className='flex flex-row gap-2'>
                 <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
-                {!isAddCoin && false && (/* i use the false to hide temporary*/
+                {/* {!isAddCoin && (
                   <IconButton onClick={handleAutoDeduction} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><AutorenewIcon /></SvgIcon></IconButton>
-                )}
+                )} */}
                 <IconButton onClick={() => setIsAddCoin(!isAddCoin)} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><PiHandCoinsFill /></SvgIcon></IconButton>
                 {isAddCoin && (
                   <IconButton onClick={handleAddCoin} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DoneIcon /></IconButton>

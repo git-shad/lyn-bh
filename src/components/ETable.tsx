@@ -1,8 +1,8 @@
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { 
     Table ,TableBody, TableCell, TableHead, TableRow,
     Dialog, DialogTitle,DialogContent, DialogActions,
-    Button
+    Button, Box
  } from '@mui/material'
 //  import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 //  import html2canvas from 'html2canvas'
@@ -46,7 +46,16 @@ const ETable: FC<TableDataRow> = ({ row, open, onClose }) => {
     //         alert('Element not found!');
     //     }
     // };
-      
+    
+    const [total, setTotal] = useState<number>(0)
+    useEffect(()=>{
+        let total: number = 0
+        row.map(row => {
+            total += row.roundOffFinal
+        })
+        setTotal(total)
+    },[row])
+
     return (
     <Dialog open={open} onClose={onClose}>
         <DialogTitle>Electric Bill Distribute</DialogTitle>
@@ -85,6 +94,12 @@ const ETable: FC<TableDataRow> = ({ row, open, onClose }) => {
                     ))}
                 </TableBody>
             </Table>
+            <Box className='flex justify-end'>
+                <Box className='flex flex-row gap-4 fixed'>
+                    <Box className='font-bold'>Total: </Box>
+                    <Box>{total}</Box>
+                </Box>
+            </Box>
         </DialogContent>
         <DialogActions className='flex flex-row gap-2'>
             <Button onClick={onClose}>Close</Button>

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Paper, Box, SvgIcon, Button, IconButton,
-  InputLabel, FormControl, MenuItem, Select, Alert, SelectChangeEvent
+  InputLabel, FormControl, MenuItem, Select, Alert, SelectChangeEvent,
+  Autocomplete, TextField
 } from '@mui/material';
 import { IonInput, IonFab, IonFabButton, IonFabList, IonContent} from '@ionic/react';
 import MDate from '../components/MDate'
@@ -16,9 +17,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import TableViewIcon from '@mui/icons-material/TableView';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import Tenants from './Tenants';
 
 const BillingAndPayments: React.FC = () => {
   const tenants = useLiveQuery(() => db.tenants.toArray());
+  const [optProfile,setOptProfile] = useState<{label: string, id: number}[]>([])
   const [rentAmount, setRentAmount] = useState<number>(0);
   const [personCount, setPersonCount] = useState<{ [room: string]: number }>({});
   const [count, setCount] = useState<number>(0);
@@ -72,11 +75,14 @@ const BillingAndPayments: React.FC = () => {
       if (tenants) {
         const rooms: [] = (await db.storage.get('rooms'))?.value;
         const room: string[] = [];
+        const optProfile: {label: string, id: number}[] = []
         const roomCount: { [room: string]: number } = {};
+        
         tenants?.map(result => {
           if (result?.room) {
             room.push(result.room);
           }
+
           if (result?.room && roomCount[result.room]) {
             roomCount[result.room]++;
           } else {
@@ -84,9 +90,15 @@ const BillingAndPayments: React.FC = () => {
               roomCount[result.room] = 1;
             }
           }
-        });
+
+          if(result?.name && result?.id){
+            optProfile.push({label: result.name, id: result.id})
+          }
+        })
+
         setRooms(rooms.filter(r => Array.from(new Set(room)).includes(r)));
         setPersonCount(roomCount);
+        setOptProfile(optProfile)
       }
     })();
   }, [tenants]);
@@ -103,6 +115,15 @@ const BillingAndPayments: React.FC = () => {
   //start: rent
   const [isRentShow, setIsRentShow] = useState<boolean>(false);
   const [isRentMSGShow, setIsRentMSGShow] = useState<boolean>(false);
+  const [optProfileSelected,setOptProfileSelected] = useState<{label: string, id: number}[]>([])
+
+  const [dateNowR, setDateNowR] = useState<string>('');
+  const [isOpenRCal, setIsOpenRCal] = useState(false); // open and close the date
+
+  const handleNewDateR = useCallback((result: string) => {
+    setDateNowR(result);
+  }, []);
+
   const handleRentInput = useCallback((e: any) => {
     setRentAmount(e?.detail.value);
   }, []);
@@ -113,8 +134,22 @@ const BillingAndPayments: React.FC = () => {
       setTimeout(() => {
         setIsRentMSGShow(false);
       }, 10000);
-    });
-  }, [rentAmount]);
+    })
+
+    if(!optProfileSelected) return
+    
+    const selectedTenant = tenants?.filter(tenant => optProfileSelected.some(profile => profile.id === tenant.id));
+    selectedTenant?.map(async (selected) => {
+      const rentBills = selected.rent_bills ? [...selected.rent_bills,{amount: rentAmount, date: dateNowR}] : [{amount: rentAmount, date: dateNowR}]
+      const filter = rentBills.filter( only => only.date === dateNowR)
+
+      if(filter.length !== 1) return
+      await db.tenants.update(selected.id,{rent_bills: rentBills,balance: (selected?.balance ?? 0) + rentAmount})
+    })
+
+  }, [rentAmount, optProfileSelected, tenants]);
+
+  const handleSelectedValue = useCallback((_: any, value: { label: string, id: number }[]) => setOptProfileSelected(value), [])
 
   const handleIsHideRent = useCallback(()=>{
     setIsRentShow( hide => {
@@ -255,9 +290,11 @@ const BillingAndPayments: React.FC = () => {
     db.storage.get('show-rent').then( result => setIsRentShow(result?.value))
     db.storage.get('show-electric').then( result => setIsElectricShow(result?.value))
     db.storage.get('show-water').then( result => setIsWaterShow(result?.value))
+
     const date = new Date().toLocaleDateString()
     setDateNowE(date)
-    setDateNowW(date)    
+    setDateNowW(date)
+    setDateNowR(date)    
   }, []);
 
   return (
@@ -270,13 +307,20 @@ const BillingAndPayments: React.FC = () => {
               <Box className='font-bold text-2xl '>Rent</Box>
               <Box className='ml-auto'><IconButton onClick={handleIsHideRent}><CloseIcon /></IconButton></Box>
             </Box>
+            <Box>
+              <Paper className='p-2 flex justify-center my-4'>
+                <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenRCal(!isOpenRCal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowR)}</Box></Button>
+              </Paper>
+            </Box>
             <Box className='flex flex-col gap-2'>
               {isRentMSGShow && (
                 <Alert severity='success'>This change has not affected the past amount of rent. Change approve!</Alert>
               )}
+              <Autocomplete value={optProfileSelected} onChange={handleSelectedValue} multiple size='small' options={optProfile} renderInput={(params) => <TextField {...params} label="Profile" />}/>
               <IonInput onFocus={handleFocus} value={rentAmount} onIonInput={handleRentInput} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Amount" />
               <Button onClick={handleRentAmount} startIcon={<DoneAllRoundedIcon />} variant='contained' fullWidth>distribute</Button>
             </Box>
+            <MDate open={isOpenRCal} onClose={()=> setIsOpenRCal(!isOpenRCal)} result={handleNewDateR}/>
           </Paper>
         )}
 
@@ -287,7 +331,7 @@ const BillingAndPayments: React.FC = () => {
               <Box className='font-bold text-2xl '>Water</Box>
               <Box className='ml-auto'><IconButton onClick={handleIsHideWater}><CloseIcon /></IconButton></Box>
             </Box>
-            <Box className=''>
+            <Box>
               <Paper className='p-2 flex justify-center my-4'>
                 <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenWCal(!isOpenWCal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowW)}</Box></Button>
               </Paper>
@@ -315,15 +359,11 @@ const BillingAndPayments: React.FC = () => {
               <Box className='font-bold text-2xl '>Electric</Box>
               <Box className='ml-auto'><IconButton onClick={handleIsHideElectric}><CloseIcon /></IconButton></Box>
             </Box>
-            <Box className='flex flex-col gap-2'>
+            <Box className='flex flex-col gap-2 my-4'>
               <Paper className='p-2 flex justify-center'>
                 <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenECal(!isOpenECal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowE)}</Box></Button>
               </Paper>
-              <Box className='flex justify-end'>
-                <Button onClick={handleOpen} startIcon={<TableViewIcon />} variant='outlined' color='primary' sx={{ borderRadius: '8px', m: 1 }}>
-                  View Table
-                </Button>
-              </Box>
+              
             </Box>
             <Box className='flex flex-col gap-4'>
               <FormControl variant='standard' className='w-full m-1'>
@@ -350,6 +390,11 @@ const BillingAndPayments: React.FC = () => {
               {isElectricMsgShow && (
                 <Alert severity='success'>Distribute to every tenant.</Alert>
               )}
+              <Box className='flex justify-end'>
+                <Button onClick={handleOpen} startIcon={<TableViewIcon />} variant='outlined' color='primary' sx={{ borderRadius: '8px' }}>
+                  View Table
+                </Button>
+              </Box>
               <Box className='flex flex-row gap-2 justify-end'>
                 {isElectricBillApprove && (
                   <Button onClick={() => { setIsElectricBillApprove(false) }} variant='contained' fullWidth>cancel</Button>
@@ -361,6 +406,7 @@ const BillingAndPayments: React.FC = () => {
           </Paper>
         )}
       </Box>
+
       <ETable row={tdata || []} open={open} onClose={handleOpen} />
       <IonFab slot='fixed' vertical='bottom' horizontal='end'>
         <IonFabButton>
