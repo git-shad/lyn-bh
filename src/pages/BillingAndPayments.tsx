@@ -8,6 +8,7 @@ import { IonInput, IonFab, IonFabButton, IonFabList, IonContent} from '@ionic/re
 import MDate from '../components/MDate'
 import db, { useLiveQuery, Tenant } from '../backend/db';
 import ETable, { type TableData } from '../components/ETable';
+import EHistory from '../components/EHistory';
 
 // icons
 import { IoHome, IoWater, IoFlash } from "react-icons/io5";
@@ -17,7 +18,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import TableViewIcon from '@mui/icons-material/TableView';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import Tenants from './Tenants';
+import HistoryIcon from '@mui/icons-material/History';
 
 const BillingAndPayments: React.FC = () => {
   const tenants = useLiveQuery(() => db.tenants.toArray());
@@ -238,6 +239,7 @@ const BillingAndPayments: React.FC = () => {
       setIsElectricMsgShow(true);
 
       const tableRow: TableData = {
+        date: dateNowE,
         room: room,
         past: past,
         present: present,
@@ -251,6 +253,15 @@ const BillingAndPayments: React.FC = () => {
         roundOffFinal: totalFinal
       };
 
+      db.hebills.get(tableRow.date).then(async (result)=>{
+        if(!result){//add
+          await db.hebills.add(tableRow)
+          return
+        }else{
+          await db.hebills.update(tableRow.date,tableRow)
+        }
+      })
+      
       setTData((tdata) => {
         tdata = tdata.filter(data => data.room !== room);
         tdata = tdata ? [...tdata, tableRow] : [tableRow];
@@ -260,9 +271,10 @@ const BillingAndPayments: React.FC = () => {
       setTimeout(() => {
         setIsElectricMsgShow(false);
       }, 5000);
-    } else {
-      setIsElectricBillApprove(true);
-    }
+
+  } else {
+    setIsElectricBillApprove(true);
+  }
   }, [past, present, tax, rate, isElectricBillApprove, room, tenantSelected, totalFinal, count, usage, total, dateNowE]);
 
   const handleIsHideElectric = useCallback(()=>{
@@ -272,6 +284,9 @@ const BillingAndPayments: React.FC = () => {
       return change
     })
   },[])
+
+  const [openEHistory, setOpenEHistory] = useState<boolean>(false)
+  const handleOpenEhistory = useCallback(()=>setOpenEHistory(isHistory => !isHistory),[])
   //end: electric
   
   const handleFocus = (e: any) => {
@@ -281,8 +296,6 @@ const BillingAndPayments: React.FC = () => {
   const handleOpen = useCallback(() => {
     setOpen(prev => !prev);
   }, []);
-
-  
 
   //initial the default
   useEffect(() => {
@@ -359,11 +372,14 @@ const BillingAndPayments: React.FC = () => {
               <Box className='font-bold text-2xl '>Electric</Box>
               <Box className='ml-auto'><IconButton onClick={handleIsHideElectric}><CloseIcon /></IconButton></Box>
             </Box>
-            <Box className='flex flex-col gap-2 my-4'>
+            <Box className='flex flex-row gap-2 mb-2'>
+              <Button fullWidth onClick={handleOpenEhistory} startIcon={<HistoryIcon />} variant='outlined' color='primary' sx={{ borderRadius: '8px', p: 1 }}>History</Button>
+              <Button fullWidth onClick={handleOpen} startIcon={<TableViewIcon />} variant='outlined' color='primary' sx={{ borderRadius: '8px', p: 1,  }}>View Table</Button>
+            </Box>
+            <Box className='flex flex-col gap-2 mb-4'>
               <Paper className='p-2 flex justify-center'>
                 <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenECal(!isOpenECal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowE)}</Box></Button>
               </Paper>
-              
             </Box>
             <Box className='flex flex-col gap-4'>
               <FormControl variant='standard' className='w-full m-1'>
@@ -390,11 +406,6 @@ const BillingAndPayments: React.FC = () => {
               {isElectricMsgShow && (
                 <Alert severity='success'>Distribute to every tenant.</Alert>
               )}
-              <Box className='flex justify-end'>
-                <Button onClick={handleOpen} startIcon={<TableViewIcon />} variant='outlined' color='primary' sx={{ borderRadius: '8px' }}>
-                  View Table
-                </Button>
-              </Box>
               <Box className='flex flex-row gap-2 justify-end'>
                 {isElectricBillApprove && (
                   <Button onClick={() => { setIsElectricBillApprove(false) }} variant='contained' fullWidth>cancel</Button>
@@ -403,6 +414,7 @@ const BillingAndPayments: React.FC = () => {
               </Box>
             </Box>
             <MDate open={isOpenECal} onClose={()=> setIsOpenECal(!isOpenECal)} result={handleNewDateE}/>
+            <EHistory open={openEHistory} onClose={handleOpenEhistory}/>
           </Paper>
         )}
       </Box>

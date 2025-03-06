@@ -4,22 +4,9 @@ import {
     Dialog, DialogTitle,DialogContent, DialogActions,
     Button, Box
  } from '@mui/material'
+import type { TableElectricBillHistory as TableData} from '../backend/db'
 //  import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 //  import html2canvas from 'html2canvas'
-
-interface TableData{
-    room: string
-    past: number
-    present: number
-    usage: number
-    rate: number
-    tax: number
-    total: number
-    roundOff: number
-    ofHead: number
-    individual: number
-    roundOffFinal: number
-}
 
 interface TableDataRow{
     row: TableData[]

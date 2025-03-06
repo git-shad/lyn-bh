@@ -37,7 +37,7 @@ const MDate: FC<Props> = ({ open, onClose, result }) => {
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>
         <Paper className='p-2 flex justify-center'>
-          <Button startIcon={<CalendarMonthIcon />} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(change)}</Box></Button>
+            <Box>{formatDate(change)}</Box>
         </Paper>
       </DialogTitle>
     <DialogContent>
