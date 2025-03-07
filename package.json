@@ -24,6 +24,7 @@
     "@capacitor/status-bar": "7.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@ionic/core": "^8.4.3",
     "@ionic/react": "^8.0.0",
     "@ionic/react-router": "^8.0.0",
     "@mui/icons-material": "^6.4.4",
@@ -62,7 +63,7 @@
     "vite": "^5.4.14",
     "vitest": "^0.34.6"
   },
-  "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
+  "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b",
   "pnpm": {
     "ignoredBuiltDependencies": [
       "sharp"

@@ -3,13 +3,16 @@ import { IonDatetime } from '@ionic/react'
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Paper, Box } from '@mui/material'
 //icon
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { DatetimePresentation } from '@ionic/core';
+
 interface Props {
   open: boolean;
   onClose?: () => void;
   result?: (date: string) => void;
+  presentation?: DatetimePresentation
 }
 
-const MDate: FC<Props> = ({ open, onClose, result }) => {
+const MDate: FC<Props> = ({ open, onClose, result, presentation }) => {
   const [change, setChange] = useState<string>('')
 
   useEffect(()=>{
@@ -41,7 +44,7 @@ const MDate: FC<Props> = ({ open, onClose, result }) => {
         </Paper>
       </DialogTitle>
     <DialogContent>
-      <IonDatetime presentation='date' onIonChange={handleDateChange} />
+      <IonDatetime presentation={presentation || 'date'} onIonChange={handleDateChange} />
     </DialogContent>
     <DialogActions>
       <Button onClick={onClose}>close</Button>
