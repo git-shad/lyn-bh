@@ -186,9 +186,33 @@ const BillingAndPayments: React.FC = () => {
     const roundOf: number = Math.round(divide);
     const dateNow: string = new Date().toLocaleDateString();
 
-    tenants?.map(async (tenant) => {
-      const water = tenant.water_bills ? [...tenant.water_bills, { amount: roundOf, date: dateNow }] : [{ amount: roundOf, date: dateNow }];
-      await db.tenants.update(tenant.id, { water_bills: water, balance: (Number(tenant.balance) + Number(roundOf)) });
+    // tenants?.map(async (tenant) => {
+    //   const water = tenant.water_bills ? [...tenant.water_bills, { amount: roundOf, date: dateNow }] : [{ amount: roundOf, date: dateNow }];
+    //   await db.tenants.update(tenant.id, { water_bills: water, balance: (Number(tenant.balance) + Number(roundOf)) });
+    // });
+
+    const date = new Date(dateNowR);
+    tenants?.forEach(async (tenant) => {
+      let oldBalance = 0
+      let newEBills = { amount: roundOf, date: dateNowE }
+      let newBalance = tenant?.balance || 0
+
+      
+      const waterb = tenant?.water_bills?.filter(item => {
+        const [month,,year] = item.date.split('/')
+        const condi = month !== (date.getMonth() + 1).toString() && year === (date.getFullYear()).toString()
+
+        if(!condi){
+          oldBalance = item.amount
+        }
+        return condi
+      })
+      const waterBills = waterb? [...waterb, newEBills ] : [newEBills];
+
+      newBalance -= oldBalance
+      newBalance += newEBills.amount
+
+      await db.tenants.update(tenant.id, { water_bills: waterBills, balance: newBalance });
     });
 
     setWaterAmount(0);
@@ -261,16 +285,27 @@ const BillingAndPayments: React.FC = () => {
 
       const date = new Date(tableRow.date)
       tenantSelected?.forEach(async (tenant) => {
+        let oldBalance = 0
+        let newEBills = { amount: totalFinal, date: dateNowE }
+        let newBalance = tenant?.balance || 0
+
         
         const electricb = tenant?.electric_bills?.filter(item => {
           const [month,,year] = item.date.split('/')
-          console.log(month,'!==',(date.getMonth() + 1).toString(),'&&',year,'!==',(date.getFullYear()).toString())
-          return month !== (date.getMonth() + 1).toString() && year !== (date.getFullYear()).toString()
-        })
+          const condi = month !== (date.getMonth() + 1).toString() && year === (date.getFullYear()).toString()
 
-        // console.log(tenant?.electric_bills,electricb)
-        const electricBills = tenant?.electric_bills? [...tenant?.electric_bills, { amount: totalFinal, date: dateNowE }] : [{ amount: totalFinal, date: dateNowE }];
-        await db.tenants.update(tenant.id, { electric_bills: electricBills, balance: (Number(tenant.balance) + Number(totalFinal)) });
+          if(!condi){
+            oldBalance = item.amount
+          }
+          return condi
+        })
+        const electricBills = electricb? [...electricb, newEBills ] : [newEBills];
+
+        
+        newBalance -= oldBalance
+        newBalance += newEBills.amount
+
+        await db.tenants.update(tenant.id, { electric_bills: electricBills, balance: newBalance });
       });
 
       setTData((prevData) => {
