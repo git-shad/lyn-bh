@@ -28,7 +28,7 @@ interface TenantHistory{
 }
 
 interface TableElectricBillHistory {
-    date: string 
+    date: string
     room: string
     past: number
     present: number
@@ -65,13 +65,10 @@ const db = new Dexie('tenantDB') as Dexie & {
     hebills: EntityTable<TableElectricBillHistory,'date'>
 }
 
-db.version(21).stores({
+db.version(27).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills',
     history: 'tenant_id,*TenantBills',
-    storage: 'key,value'
-})
-
-db.version(22).stores({
+    storage: 'key,value',
     hebills: 'date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal'
 })
 

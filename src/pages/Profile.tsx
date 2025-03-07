@@ -88,6 +88,7 @@ const Profile: React.FC = () => {
     })();
   }, [id, GoTo,tenant]);
 
+  //for paying button
   const handleDataBills = useCallback(async (data: {amount: number, date: string},bill: string, index: number)=>{
     const currentDate = new Date().toLocaleDateString()
     if(bill === 'rent' && tenant?.balance && tenant?.coin && history?.bills){

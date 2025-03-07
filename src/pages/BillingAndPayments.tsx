@@ -64,8 +64,7 @@ const BillingAndPayments: React.FC = () => {
   // select room first
   useEffect(() => {
     if (rooms.length > 0) {
-      let roomSwitch = rooms.findIndex((_) => _ === room);
-      const e = { target: { value: rooms[roomSwitch + 1] ? rooms[roomSwitch + 1] : rooms[0] } } as SelectChangeEvent;
+      const e = { target: { value: rooms[0] } } as SelectChangeEvent;
       handleInputRoom(e);
     }
   }, [rooms]);
@@ -191,6 +190,7 @@ const BillingAndPayments: React.FC = () => {
       const water = tenant.water_bills ? [...tenant.water_bills, { amount: roundOf, date: dateNow }] : [{ amount: roundOf, date: dateNow }];
       await db.tenants.update(tenant.id, { water_bills: water, balance: (Number(tenant.balance) + Number(roundOf)) });
     });
+
     setWaterAmount(0);
     setISWaterBillApprove(false);
 
@@ -224,17 +224,12 @@ const BillingAndPayments: React.FC = () => {
   const [isElectricMsgShow, setIsElectricMsgShow] = useState<boolean>(false);
   const [tdata, setTData] = useState<TableData[]>([]);
   const [open, setOpen] = useState(false);
+
   const handleElecticAmount = useCallback(async () => {
     if (past > 0 && present > 0 && isElectricBillApprove) {
       await db.storage.update(room, { value: Number(present) });
       await db.storage.update('rate', { value: rate });
       await db.storage.update('tax', { value: tax });
- 
-      // all tenant in room number are suppy the bill
-      tenantSelected?.map(async (tenant) => {
-        const electric = tenant.electric_bills ? [...tenant.electric_bills, { amount: totalFinal, date: dateNowE }] : [{ amount: totalFinal, date: dateNowE }];
-        await db.tenants.update(tenant.id, { electric_bills: electric, balance: (Number(tenant.balance) + Number(totalFinal)) });
-      });
 
       setIsElectricMsgShow(true);
 
@@ -253,28 +248,43 @@ const BillingAndPayments: React.FC = () => {
         roundOffFinal: totalFinal
       };
 
-      db.hebills.get(tableRow.date).then(async (result)=>{
-        if(!result){//add
-          await db.hebills.add(tableRow)
-          return
-        }else{
-          await db.hebills.update(tableRow.date,tableRow)
-        }
-      })
+      const existingBill = await db.hebills.get(tableRow.date);
+      const [e_month,,e_year] = existingBill?.date?.split('/') || [];
+      const [t_month,,t_year] = tableRow.date.split('/')
+      const isExistDate = e_month === t_month && e_year === t_year
       
-      setTData((tdata) => {
-        tdata = tdata.filter(data => data.room !== room);
-        tdata = tdata ? [...tdata, tableRow] : [tableRow];
-        return tdata;
+      if (!existingBill || existingBill.room !== tableRow.room || !isExistDate) {
+        await db.hebills.add(tableRow);
+      } else {
+        await db.hebills.update(existingBill.date, tableRow);
+      }
+
+      const date = new Date(tableRow.date)
+      tenantSelected?.forEach(async (tenant) => {
+        
+        const electricb = tenant?.electric_bills?.filter(item => {
+          const [month,,year] = item.date.split('/')
+          console.log(month,'!==',(date.getMonth() + 1).toString(),'&&',year,'!==',(date.getFullYear()).toString())
+          return month !== (date.getMonth() + 1).toString() && year !== (date.getFullYear()).toString()
+        })
+
+        // console.log(tenant?.electric_bills,electricb)
+        const electricBills = tenant?.electric_bills? [...tenant?.electric_bills, { amount: totalFinal, date: dateNowE }] : [{ amount: totalFinal, date: dateNowE }];
+        await db.tenants.update(tenant.id, { electric_bills: electricBills, balance: (Number(tenant.balance) + Number(totalFinal)) });
+      });
+
+      setTData((prevData) => {
+        const updatedData = prevData.filter(data => data.room !== room);
+        return [...updatedData, tableRow];
       });
 
       setTimeout(() => {
         setIsElectricMsgShow(false);
       }, 5000);
 
-  } else {
-    setIsElectricBillApprove(true);
-  }
+    } else {
+      setIsElectricBillApprove(true);
+    }
   }, [past, present, tax, rate, isElectricBillApprove, room, tenantSelected, totalFinal, count, usage, total, dateNowE]);
 
   const handleIsHideElectric = useCallback(()=>{
