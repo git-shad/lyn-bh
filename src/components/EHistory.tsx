@@ -43,7 +43,7 @@ const EHistory:React.FC<Props> = ({open,onClose})=>{
          console.log(date,only)
          setRow(only)
       })()
-   },[changeDate])
+   },[changeDate,dataEHistory])
 
    useEffect(()=>{
       const dateNow = new Date().toLocaleDateString()
@@ -70,10 +70,10 @@ const EHistory:React.FC<Props> = ({open,onClose})=>{
             const canvas = await html2canvas(element);
             const dataUrl = canvas.toDataURL('image/png');
             const base64Data = dataUrl.split(',')[1];
-            const link = document.createElement("a");
-            link.href = dataUrl;
-            link.download = "screenshot.png";
-            link.click();
+            // const link = document.createElement("a");
+            // link.href = dataUrl;
+            // link.download = "screenshot.png";
+            // link.click();
 
             await Filesystem.writeFile({
                path: 'ElectricBillsTable.png',

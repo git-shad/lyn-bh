@@ -25,7 +25,7 @@ const ETable: FC<TableDataRow> = ({ row, open, onClose }) => {
 
     return (
     <Dialog open={open} onClose={onClose}>
-        <DialogTitle>Tables Distributed</DialogTitle>
+        <DialogTitle>Electric Bills Distributed</DialogTitle>
         <DialogContent>
             <Box className='overflow-auto'>
                 <Table>            
