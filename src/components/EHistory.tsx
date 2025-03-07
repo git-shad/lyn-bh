@@ -39,8 +39,7 @@ const EHistory:React.FC<Props> = ({open,onClose})=>{
          const only = dataEHistory.filter(item => {
             const [month, ,year] = item.date.split('/')
             return month === (date.getMonth() + 1).toString() && year === (date.getFullYear()).toString()
-         }) 
-         console.log(date,only)
+         })
          setRow(only)
       })()
    },[changeDate,dataEHistory])
