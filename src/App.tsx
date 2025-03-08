@@ -56,6 +56,13 @@ import SettingsIcon from '@mui/icons-material/Settings';
 const App: React.FC = () => {
 
   useEffect(()=>{
+    const interval = setInterval(()=>{
+      
+    },60 * 1000)//run every one minutes
+    return ()=> clearInterval(interval)
+  },[])
+
+  useEffect(()=>{
     
     (async ()=>{
       // syncAllTables()

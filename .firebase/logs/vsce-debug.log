@@ -1,0 +1,63 @@
+[debug] [2025-03-08T10:12:52.595Z] [Firebase Plugin] Activating Firebase extension.
+[debug] [2025-03-08T10:13:08.769Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 1.8.4) on port 50001
+[debug] [2025-03-08T10:13:10.874Z] I0308 18:13:10.870749    3497 control.go:59] [/emulator/lyn-bh b474] UpdateResources(): done
+Schema: sources: schema/schema.gql [2088B] 
+Connector "default": sources: connector/mutations.gql [1233B] connector/queries.gql [1802B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:13:10.870749    3497 control.go:59] [/emulator/lyn-bh b474] UpdateResources(): done\nSchema: sources: schema/schema.gql [2088B] \nConnector \"default\": sources: connector/mutations.gql [1233B] connector/queries.gql [1802B] \n"}}
+[debug] [2025-03-08T10:13:10.877Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-03-08T10:13:10.879Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2025-03-08T10:13:10.880Z] Starting Data Connect Emulator with command {"binary":"/home/ishad/.cache/firebase/emulators/dataconnect-emulator-1.8.4","args":["--logtostderr","-v=2","dev","--listen=localhost:50001","--config_dir=/home/ishad/project/lyn-bh/dataconnect","--enable_output_schema_extensions=true","--enable_output_generated_sdk=true"],"optionalArgs":["listen","config_dir","enable_output_schema_extensions","enable_output_generated_sdk"],"joinArgs":true,"shell":false,"port":9399} {"metadata":{"emulator":{"name":"dataconnect"},"message":"Starting Data Connect Emulator with command {\"binary\":\"/home/ishad/.cache/firebase/emulators/dataconnect-emulator-1.8.4\",\"args\":[\"--logtostderr\",\"-v=2\",\"dev\",\"--listen=localhost:50001\",\"--config_dir=/home/ishad/project/lyn-bh/dataconnect\",\"--enable_output_schema_extensions=true\",\"--enable_output_generated_sdk=true\"],\"optionalArgs\":[\"listen\",\"config_dir\",\"enable_output_schema_extensions\",\"enable_output_generated_sdk\"],\"joinArgs\":true,\"shell\":false,\"port\":9399}"}}
+[info] i  dataconnect: Data Connect Emulator logging to dataconnect-debug.log {"metadata":{"emulator":{"name":"dataconnect"},"message":"Data Connect Emulator logging to dataconnect-debug.log"}}
+[debug] [2025-03-08T10:13:11.009Z] I0308 18:13:10.957262    3507 load.go:37] Reloading schema and connectors...
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:13:10.957262    3507 load.go:37] Reloading schema and connectors...\n"}}
+[debug] [2025-03-08T10:13:11.115Z] I0308 18:13:11.090537    3507 control.go:59] [/emulator/lyn-bh c243] UpdateResources(): done
+Schema: sources: schema/schema.gql [2088B] 
+Connector "default": sources: connector/mutations.gql [1233B] connector/queries.gql [1802B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:13:11.090537    3507 control.go:59] [/emulator/lyn-bh c243] UpdateResources(): done\nSchema: sources: schema/schema.gql [2088B] \nConnector \"default\": sources: connector/mutations.gql [1233B] connector/queries.gql [1802B] \n"}}
+[debug] [2025-03-08T10:13:11.662Z] I0308 18:13:11.177702    3507 codegen.go:82] [connector "default" javascriptSdk] Generating sources into "/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector"
+I0308 18:13:11.207418    3507 collector.go:107] schema extensions wrote into "/home/ishad/project/lyn-bh/dataconnect/.dataconnect/schema"
+Generated sources: prelude.gql [67020B] 
+I0308 18:13:11.219338    3507 collector.go:107] connector "default" javascriptSdk wrote into "/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector"
+Generated sources: package.json [895B] README.md [2800B] react/package.json [468B] react/esm/package.json [17B] react/README.md [5443B] index.d.ts [246B] esm/index.esm.js [109B] esm/package.json [17B] index.cjs.js [145B] react/index.d.ts [228B] react/index.cjs.js [0B] react/esm/index.esm.js [0B] 
+I0308 18:13:11.222757    3507 installsdk.go:48] Package @firebasegen/default-connector is already installed. Skipping installation
+I0308 18:13:11.222967    3507 load.go:115] Finished reloading
+I0308 18:13:11.228681    3507 dev.go:95] Listening on address (HTTP + gRPC): 127.0.0.1:50001
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:13:11.177702    3507 codegen.go:82] [connector \"default\" javascriptSdk] Generating sources into \"/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector\"\nI0308 18:13:11.207418    3507 collector.go:107] schema extensions wrote into \"/home/ishad/project/lyn-bh/dataconnect/.dataconnect/schema\"\nGenerated sources: prelude.gql [67020B] \nI0308 18:13:11.219338    3507 collector.go:107] connector \"default\" javascriptSdk wrote into \"/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector\"\nGenerated sources: package.json [895B] README.md [2800B] react/package.json [468B] react/esm/package.json [17B] react/README.md [5443B] index.d.ts [246B] esm/index.esm.js [109B] esm/package.json [17B] index.cjs.js [145B] react/index.d.ts [228B] react/index.cjs.js [0B] react/esm/index.esm.js [0B] \nI0308 18:13:11.222757    3507 installsdk.go:48] Package @firebasegen/default-connector is already installed. Skipping installation\nI0308 18:13:11.222967    3507 load.go:115] Finished reloading\nI0308 18:13:11.228681    3507 dev.go:95] Listening on address (HTTP + gRPC): 127.0.0.1:50001\n"}}
+[debug] [2025-03-08T10:13:13.190Z] I0308 18:13:12.508408    3507 engine.go:148] [/emulator/lyn-bh c243] ExecuteGraphqlRead IntrospectionQuery: succeeded. 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:13:12.508408    3507 engine.go:148] [/emulator/lyn-bh c243] ExecuteGraphqlRead IntrospectionQuery: succeeded. \n"}}
+[info] [Firebase Plugin] Stopping Data Connect toolkit
+[warn] ⚠  Data Connect Emulator has exited upon receiving signal: SIGINT 
+[debug] [2025-03-08T10:45:07.648Z] [Firebase Plugin] Activating Firebase extension.
+[debug] [2025-03-08T10:45:10.101Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 1.8.4) on port 50001
+[debug] [2025-03-08T10:45:12.200Z] I0308 18:45:12.162898     916 control.go:59] [/emulator/lyn-bh 254d] UpdateResources(): done
+Schema: sources: schema/schema.gql [2088B] 
+Connector "default": sources: connector/queries.gql [1802B] connector/mutations.gql [1233B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.162898     916 control.go:59] [/emulator/lyn-bh 254d] UpdateResources(): done\nSchema: sources: schema/schema.gql [2088B] \nConnector \"default\": sources: connector/queries.gql [1802B] connector/mutations.gql [1233B] \n"}}
+[debug] [2025-03-08T10:45:12.203Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-03-08T10:45:12.204Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2025-03-08T10:45:12.209Z] Starting Data Connect Emulator with command {"binary":"/home/ishad/.cache/firebase/emulators/dataconnect-emulator-1.8.4","args":["--logtostderr","-v=2","dev","--listen=localhost:50001","--config_dir=/home/ishad/project/lyn-bh/dataconnect","--enable_output_schema_extensions=true","--enable_output_generated_sdk=true"],"optionalArgs":["listen","config_dir","enable_output_schema_extensions","enable_output_generated_sdk"],"joinArgs":true,"shell":false,"port":9399} {"metadata":{"emulator":{"name":"dataconnect"},"message":"Starting Data Connect Emulator with command {\"binary\":\"/home/ishad/.cache/firebase/emulators/dataconnect-emulator-1.8.4\",\"args\":[\"--logtostderr\",\"-v=2\",\"dev\",\"--listen=localhost:50001\",\"--config_dir=/home/ishad/project/lyn-bh/dataconnect\",\"--enable_output_schema_extensions=true\",\"--enable_output_generated_sdk=true\"],\"optionalArgs\":[\"listen\",\"config_dir\",\"enable_output_schema_extensions\",\"enable_output_generated_sdk\"],\"joinArgs\":true,\"shell\":false,\"port\":9399}"}}
+[info] i  dataconnect: Data Connect Emulator logging to dataconnect-debug.log {"metadata":{"emulator":{"name":"dataconnect"},"message":"Data Connect Emulator logging to dataconnect-debug.log"}}
+[debug] [2025-03-08T10:45:12.295Z] I0308 18:45:12.263333     926 load.go:37] Reloading schema and connectors...
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.263333     926 load.go:37] Reloading schema and connectors...\n"}}
+[debug] [2025-03-08T10:45:12.412Z] I0308 18:45:12.411601     926 control.go:59] [/emulator/lyn-bh 87da] UpdateResources(): done
+Schema: sources: schema/schema.gql [2088B] 
+Connector "default": sources: connector/mutations.gql [1233B] connector/queries.gql [1802B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.411601     926 control.go:59] [/emulator/lyn-bh 87da] UpdateResources(): done\nSchema: sources: schema/schema.gql [2088B] \nConnector \"default\": sources: connector/mutations.gql [1233B] connector/queries.gql [1802B] \n"}}
+[debug] [2025-03-08T10:45:12.476Z] I0308 18:45:12.476328     926 codegen.go:82] [connector "default" javascriptSdk] Generating sources into "/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector"
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.476328     926 codegen.go:82] [connector \"default\" javascriptSdk] Generating sources into \"/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector\"\n"}}
+[debug] [2025-03-08T10:45:12.498Z] I0308 18:45:12.498087     926 collector.go:107] schema extensions wrote into "/home/ishad/project/lyn-bh/dataconnect/.dataconnect/schema"
+Generated sources: prelude.gql [67020B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.498087     926 collector.go:107] schema extensions wrote into \"/home/ishad/project/lyn-bh/dataconnect/.dataconnect/schema\"\nGenerated sources: prelude.gql [67020B] \n"}}
+[debug] [2025-03-08T10:45:12.508Z] I0308 18:45:12.505098     926 collector.go:107] connector "default" javascriptSdk wrote into "/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector"
+Generated sources: index.d.ts [246B] index.cjs.js [145B] package.json [895B] README.md [2800B] react/esm/package.json [17B] react/index.cjs.js [0B] esm/index.esm.js [109B] esm/package.json [17B] react/index.d.ts [228B] react/package.json [468B] react/esm/index.esm.js [0B] react/README.md [5443B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.505098     926 collector.go:107] connector \"default\" javascriptSdk wrote into \"/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector\"\nGenerated sources: index.d.ts [246B] index.cjs.js [145B] package.json [895B] README.md [2800B] react/esm/package.json [17B] react/index.cjs.js [0B] esm/index.esm.js [109B] esm/package.json [17B] react/index.d.ts [228B] react/package.json [468B] react/esm/index.esm.js [0B] react/README.md [5443B] \n"}}
+[debug] [2025-03-08T10:45:12.517Z] I0308 18:45:12.517337     926 installsdk.go:48] Package @firebasegen/default-connector is already installed. Skipping installation
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.517337     926 installsdk.go:48] Package @firebasegen/default-connector is already installed. Skipping installation\n"}}
+[debug] [2025-03-08T10:45:12.519Z] I0308 18:45:12.517668     926 load.go:115] Finished reloading
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.517668     926 load.go:115] Finished reloading\n"}}
+[debug] [2025-03-08T10:45:12.530Z] I0308 18:45:12.530510     926 dev.go:95] Listening on address (HTTP + gRPC): 127.0.0.1:50001
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.530510     926 dev.go:95] Listening on address (HTTP + gRPC): 127.0.0.1:50001\n"}}
+[debug] [2025-03-08T10:45:12.773Z] I0308 18:45:12.773362     926 engine.go:148] [/emulator/lyn-bh 87da] ExecuteGraphqlRead IntrospectionQuery: succeeded. 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I0308 18:45:12.773362     926 engine.go:148] [/emulator/lyn-bh 87da] ExecuteGraphqlRead IntrospectionQuery: succeeded. \n"}}
