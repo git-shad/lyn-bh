@@ -328,7 +328,7 @@ const Profile: React.FC = () => {
                 Paid on:  <span className='font-semibold'>{formatDate(bill.end_date)}</span>
               </Box>
             </Box>
-          ) : (<></>))}
+          ) : (<Box></Box>))}
         </IonList>
       )}
       <EditTenant open={open} onClose={handleOpen} id={id}/>

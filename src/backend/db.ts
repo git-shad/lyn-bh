@@ -81,6 +81,8 @@ db.version(27).stores({
 
 //first run when database are created
 db.on('populate',async ()=>{
+    await db.settings.add({key: 'syncdb', value: false})
+    await db.settings.add({key: 'retrievedb', value: false})
     await db.storage.add({key: 'rent', value: 1000})
     await db.storage.add({key: 'rate', value: 8.5907})
     await db.storage.add({key: 'tax', value: 36.42})
