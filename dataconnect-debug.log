@@ -1,0 +1,15 @@
+I0308 15:16:40.575509    3201 load.go:37] Reloading schema and connectors...
+I0308 15:16:40.610728    3201 control.go:59] [/emulator/lyn-bh 20fd] UpdateResources(): done
+Schema: sources: schema/schema.gql [2088B] 
+Connector "default": sources: connector/mutations.gql [1233B] connector/queries.gql [1802B] 
+I0308 15:16:40.631722    3201 codegen.go:82] [connector "default" javascriptSdk] Generating sources into "/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector"
+I0308 15:16:40.636295    3201 collector.go:107] schema extensions wrote into "/home/ishad/project/lyn-bh/dataconnect/.dataconnect/schema"
+Generated sources: prelude.gql [67020B] 
+I0308 15:16:40.636788    3201 collector.go:107] connector "default" javascriptSdk wrote into "/home/ishad/project/lyn-bh/dataconnect-generated/js/default-connector"
+Generated sources: package.json [895B] react/index.d.ts [228B] react/README.md [5443B] esm/index.esm.js [109B] esm/package.json [17B] index.cjs.js [145B] react/esm/package.json [17B] react/index.cjs.js [0B] react/esm/index.esm.js [0B] index.d.ts [246B] README.md [2800B] react/package.json [468B] 
+I0308 15:16:40.638956    3201 installsdk.go:48] Package @firebasegen/default-connector is already installed. Skipping installation
+I0308 15:16:40.639065    3201 load.go:115] Finished reloading
+I0308 15:16:40.639470    3201 dev.go:95] Listening on address (HTTP + gRPC): 127.0.0.1:9399
+I0308 15:16:44.060485    3201 control.go:59] [/emulator/lyn-bh a3fb] UpdateResources(): done
+Schema: sources: schema/schema.gql [2088B] 
+Connector "default": sources: connector/queries.gql [1802B] connector/mutations.gql [1233B] 

@@ -45,6 +45,7 @@ import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
 import { useEffect } from 'react'
 import db, { useLiveQuery } from './backend/db'
+import { syncAllTables,syncFirestoreToDexie } from './backend/firestore'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -55,8 +56,10 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 const App: React.FC = () => {
 
   useEffect(()=>{
-
+    
     (async ()=>{
+      // syncAllTables()
+      // syncFirestoreToDexie()
       const tenants = await db.tenants.toArray()
       const dateNow: string = new Date().toLocaleDateString()
       tenants?.map(async (tenant) => {
