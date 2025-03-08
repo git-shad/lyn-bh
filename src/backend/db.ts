@@ -58,18 +58,25 @@ interface Storage{
     value: any
 }
 
+interface Settings{
+    key: string
+    value: any
+}
+
 const db = new Dexie('tenantDB') as Dexie & {
     tenants: EntityTable<Tenant,'id'>
     history: EntityTable<TenantHistory,'tenant_id'>
     storage: EntityTable<Storage,'key'>
     hebills: EntityTable<TableElectricBillHistory,'date'>
+    settings: EntityTable<Settings,'key'>
 }
 
 db.version(27).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills',
     history: 'tenant_id,*TenantBills',
     storage: 'key,value',
-    hebills: 'date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal'
+    hebills: 'date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal',
+    settings: 'key,value'
 })
 
 //first run when database are created

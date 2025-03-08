@@ -43,15 +43,15 @@ import {Button,SvgIcon} from '@mui/material'
 import Tenants from './pages/Tenants';
 import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings'
 import { useEffect } from 'react'
 import db, { useLiveQuery } from './backend/db'
-import { syncAllTables,syncFirestoreToDexie } from './backend/firestore'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { FaHouseChimneyUser } from "react-icons/fa6";
 import PaymentsIcon from '@mui/icons-material/Payments';
-
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const App: React.FC = () => {
 
@@ -67,7 +67,7 @@ const App: React.FC = () => {
           const rentH = (await db.history.get(tenant.id))?.bills?.filter(bill => bill.label === 'rent')
           const rentB = tenant.rent_bills
 
-          //add rent payment if not exists in history andrent bill
+          //add rent payment if not exists in history and rent bill
           if(!rentH?.find(date => date.start_date === dateNow) && !rentB?.find(date => date.date === dateNow)){
             const rentCost = 1000
             const rent = tenant.rent_bills ? [...(tenant.rent_bills || []), { amount: rentCost, date: dateNow }] : [{ amount: rentCost, date: dateNow }]
@@ -99,6 +99,9 @@ const App: React.FC = () => {
             <IonItem>
               <Button component={Link} to='/payments' fullWidth sx={{justifyContent: 'left', textTransform: 'none'}} startIcon={<PaymentsIcon/>}>Billing & Payments</Button>
             </IonItem>
+            <IonItem>
+              <Button component={Link} to='/settings' fullWidth sx={{justifyContent: 'left', textTransform: 'none'}} startIcon={<SettingsIcon/>}>Settings</Button>
+            </IonItem>
           </IonList>
         </IonContent>
       </IonMenu>
@@ -118,6 +121,7 @@ const App: React.FC = () => {
             <Route path="/tenants" exact component={Tenants}/>
             <Route path="/tenants/profile" exact component={Profile}/>
             <Route path="/payments" exact component={BillingAndPayments}/>
+            <Route path="/settings" exact component={Settings}/>
           </IonRouterOutlet>
           </IonContent>
         </IonPage>
