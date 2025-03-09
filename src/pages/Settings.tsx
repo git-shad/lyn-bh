@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Box,FormControlLabel,Switch, Paper, Snackbar, Alert } from '@mui/material'
-import {useOnlineStatus} from '../components/Online'
 import { db as dexie } from '../backend/db'
 import { Dexie } from 'dexie'
 import { initializeApp } from "firebase/app";
@@ -29,31 +28,30 @@ const firebaseConfig: FirebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const firestoreDB = getFirestore(app);
 
-// Sync a specific table to Firestore
-const syncTable = async <T extends { [x: string]: any }>(firestore: any, table: Dexie.Table<T, any>, collectionName: string) => {
-   try {
-      const items = await table.toArray();
-
-      for (const item of items) {
-         if (!item.id) continue;
-
-         const docRef = doc(firestore, collectionName, item.id.toString());
-         const docSnap = await getDoc(docRef);
-
-         if (docSnap.exists()) {
-            await setDoc(docRef, item, { merge: true });
-            console.log(`Updated item in ${collectionName}:`, item);
-         } else {
-            await setDoc(docRef, item);
-            console.log(`Added item to ${collectionName}:`, item);
-         }
-      }
-   } catch (error) {
-      console.error(`Error syncing data to ${collectionName}:`, error);
-   }
-};
-
 const syncAllTables = async (firestore: any) => {
+   const syncTable = async <T extends { [x: string]: any }>(firestore: any, table: Dexie.Table<T, any>, collectionName: string) => {
+      try {
+         const items = await table.toArray();
+
+         for (const item of items) {
+            if (!item.id) continue;
+
+            const docRef = doc(firestore, collectionName, item.id.toString());
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+               await setDoc(docRef, item, { merge: true });
+               console.log(`Updated item in ${collectionName}:`, item);
+            } else {
+               await setDoc(docRef, item);
+               console.log(`Added item to ${collectionName}:`, item);
+            }
+         }
+      } catch (error) {
+         console.error(`Error syncing data to ${collectionName}:`, error);
+      }
+   };
+
    await syncTable(firestore, dexie.tenants, 'tenants');
    await syncTable(firestore, dexie.storage, 'storage');
    await syncTable(firestore, dexie.history, 'history');
@@ -61,21 +59,23 @@ const syncAllTables = async (firestore: any) => {
    console.log('All tables synced to Firestore');
 };
 
-const getAllDataAndStore = async <T extends { [x: string]: any }>(firestore: any, collectionName: string, table: Dexie.Table<T, any>) => {
-   try {
-      const querySnapshot = await getDocs(collection(firestore, collectionName));
-      const data = querySnapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() } as unknown as T));
 
-      await table.bulkPut(data);
-      console.log(`Data from ${collectionName} stored in Dexie:`, data);
-      return data;
-   } catch (error) {
-      console.error(`Error fetching and storing data from ${collectionName}:`, error);
-      return [];
-   }
-};
 
 const syncFirestoreToDexie = async (firestore: any) => {
+   const getAllDataAndStore = async <T extends { [x: string]: any }>(firestore: any, collectionName: string, table: Dexie.Table<T, any>) => {
+      try {
+         const querySnapshot = await getDocs(collection(firestore, collectionName));
+         const data = querySnapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() } as unknown as T));
+   
+         await table.bulkPut(data);
+         console.log(`Data from ${collectionName} stored in Dexie:`, data);
+         return data;
+      } catch (error) {
+         console.error(`Error fetching and storing data from ${collectionName}:`, error);
+         return [];
+      }
+   };
+
    await getAllDataAndStore(firestore, 'tenants', dexie.tenants);
    await getAllDataAndStore(firestore, 'storage', dexie.storage);
    await getAllDataAndStore(firestore, 'history', dexie.history);
@@ -99,7 +99,6 @@ const Settings = ()=>{
    const [isSync, setIsSync] = useState<boolean>(false);
    const [isRetrieve, setIsRetrieve] = useState<boolean>(false);
    const [openSnackbar,setOpenSnackbar] = useState(false)
-   const isOnline = useOnlineStatus()
     
    useEffect(() => {
       (async () => {
@@ -112,20 +111,15 @@ const Settings = ()=>{
    }, []);
 
    const handleSyncData = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-      console.log(isOnline)
-      if(isOnline){
-         const { checked } = event.target;
-         await dexie.settings.update('syncdb', { value: checked });
-         setIsSync(checked);
-      }
+      const { checked } = event.target;
+      await dexie.settings.update('syncdb', { value: checked });
+      setIsSync(checked);
    }, []);
 
    const handleRetrieveData = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-      if(isOnline){
-         const { checked } = event.target;
-         await dexie.settings.update('retrievedb', { value: checked });
-         setIsRetrieve(checked);
-      }
+      const { checked } = event.target;
+      await dexie.settings.update('retrievedb', { value: checked });
+      setIsRetrieve(checked);
    }, []);
 
    const handleSnackBarClose = useCallback(()=>{

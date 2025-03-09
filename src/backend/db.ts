@@ -1,5 +1,6 @@
 import { Dexie, type EntityTable } from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { syncAllTables, syncFirestoreToDexie, firestoreDB } from '../pages/Settings'
 
 interface ElectricBill {
     amount: number
@@ -92,6 +93,14 @@ db.on('populate',async ()=>{
     const rooms = ['ROOM N1','ROOM N2','ROOM N3','ROOM N4','ROOM N5','ROOM N6','ROOM N7','ROOM N8','ROOM N9&10','ROOM N11','ROOM N12','ROOM N13','ROOM N14']
     await db.storage.add({key: 'rooms', value: rooms})
     rooms.map(async (room)=> await db.storage.add({key: room, value: 0})) 
+})
+
+db.on('ready',async ()=>{
+    const isSync = await db.settings.get('syncdb')
+    const isRetrive = await db.settings.get('retrievedb')
+
+    if(isSync?.value) await syncAllTables(firestoreDB);
+    if(isRetrive?.value) await syncFirestoreToDexie(firestoreDB);
 })
 
 const rentCost = async () =>{

@@ -45,9 +45,8 @@ import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings'
 import { useEffect } from 'react'
-import db, { useLiveQuery } from './backend/db'
+import db from './backend/db'
 import {firestoreDB,syncAllTables,syncFirestoreToDexie} from './pages/Settings'
-import {useOnlineStatus} from './components/Online'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -56,23 +55,8 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 const App: React.FC = () => {
-  const isOnline = useOnlineStatus()
-  
-  useEffect(()=>{
-    const interval = setInterval(async ()=>{
-      if(isOnline){
-        const isSync = await db.settings.get('syncdb')
-        const isRetrive = await db.settings.get('retrievedb')
-
-        if(isSync?.value) await syncAllTables(firestoreDB);
-        if(isRetrive?.value) await syncFirestoreToDexie(firestoreDB);
-      }
-    },60 * 1000)//run every one minutes
-    return ()=> clearInterval(interval)
-  },[])
 
   useEffect(()=>{
-    
     (async ()=>{
       // syncAllTables()
       // syncFirestoreToDexie()
