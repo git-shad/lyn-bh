@@ -70,7 +70,7 @@ const Profile: React.FC = () => {
 
     (async () => {
       const tenant = await db.tenants.get(id);
-
+      console.log(tenant)
       if (!tenant) {
         GoTo('/tenants');
         return;
@@ -266,9 +266,9 @@ const Profile: React.FC = () => {
                 <IonLabel>Rent</IonLabel>
               </IonItem>
               <IonList slot='content' lines='none'>
-                {dRent?.map((data, index) => (
+                {dRent?.map((data,index) => (
                   <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
-                    <Box className='row-span-1'>Amount: <span className='font-semibold'>{data?.amount}</span></Box>
+                    <Box className='row-span-1'>Amount: <Box className='font-semibold'>{data?.amount}</Box></Box>
                     <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                     <Box className='row-span-1 flex justify-end'>
                       <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'rent', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
@@ -283,9 +283,9 @@ const Profile: React.FC = () => {
                 <IonLabel>Water</IonLabel>
               </IonItem>
               <IonList slot='content' lines='none'>
-                {dWater?.map((data, index) => (
+                {dWater?.map((data,index) => (
                   <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
-                    <Box className='row-span-1'>Amount: <span className='font-semibold'>{data?.amount}</span></Box>
+                    <Box className='row-span-1'>Amount: <Box className='font-semibold'>{data?.amount}</Box></Box>
                     <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                     <Box className='row-span-1 flex justify-end'>
                       <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'water', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
@@ -300,9 +300,9 @@ const Profile: React.FC = () => {
                 <IonLabel>Electric</IonLabel>
               </IonItem>
               <IonList slot='content' lines='none'>
-                {dElectric?.map((data, index) => (
+                {dElectric?.map((data,index) => (
                   <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
-                    <Box className='row-span-1'>Amount: <span className='font-semibold'>{data?.amount}</span></Box>
+                    <Box className='row-span-1'>Amount: <Box className='font-semibold'>{data?.amount}</Box></Box>
                     <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                     <Box className='row-span-1 flex justify-end'>
                       <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'electric', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>

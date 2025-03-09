@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Box,FormControlLabel,Switch, Paper } from '@mui/material'
-
+import { Box,FormControlLabel,Switch, Paper, Snackbar, Alert } from '@mui/material'
+import {useOnlineStatus} from '../components/Online'
 import { db as dexie } from '../backend/db'
 import { Dexie } from 'dexie'
 import { initializeApp } from "firebase/app";
@@ -98,7 +98,9 @@ const deleteFromFirestore = async (firestore: any, collectionName: string, id: n
 const Settings = ()=>{
    const [isSync, setIsSync] = useState<boolean>(false);
    const [isRetrieve, setIsRetrieve] = useState<boolean>(false);
-
+   const [openSnackbar,setOpenSnackbar] = useState(false)
+   const isOnline = useOnlineStatus()
+    
    useEffect(() => {
       (async () => {
          const syncdb = await dexie.settings.get('syncdb');
@@ -110,17 +112,25 @@ const Settings = ()=>{
    }, []);
 
    const handleSyncData = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const { checked } = event.target;
-      await dexie.settings.update('syncdb', { value: checked });
-      setIsSync(checked);
+      console.log(isOnline)
+      if(isOnline){
+         const { checked } = event.target;
+         await dexie.settings.update('syncdb', { value: checked });
+         setIsSync(checked);
+      }
    }, []);
 
    const handleRetrieveData = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const { checked } = event.target;
-      await dexie.settings.update('retrievedb', { value: checked });
-      setIsRetrieve(checked);
+      if(isOnline){
+         const { checked } = event.target;
+         await dexie.settings.update('retrievedb', { value: checked });
+         setIsRetrieve(checked);
+      }
    }, []);
 
+   const handleSnackBarClose = useCallback(()=>{
+      setOpenSnackbar(false)
+   },[])
    return (
       <Box className='flex flex-col gap-2 p-2'>
          <Paper className='p-2'>
@@ -137,6 +147,9 @@ const Settings = ()=>{
             labelPlacement='end'
          />
          </Paper>
+         <Snackbar open={openSnackbar} onClose={handleSnackBarClose} autoHideDuration={6000}>
+            <Alert onClose={handleSnackBarClose} severity='error' variant='filled'></Alert>
+         </Snackbar>
       </Box>
    )
 }
