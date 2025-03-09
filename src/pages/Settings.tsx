@@ -59,8 +59,6 @@ const syncAllTables = async (firestore: any) => {
    console.log('All tables synced to Firestore');
 };
 
-
-
 const syncFirestoreToDexie = async (firestore: any) => {
    const getAllDataAndStore = async <T extends { [x: string]: any }>(firestore: any, collectionName: string, table: Dexie.Table<T, any>) => {
       try {
@@ -99,6 +97,7 @@ const Settings = ()=>{
    const [isSync, setIsSync] = useState<boolean>(false);
    const [isRetrieve, setIsRetrieve] = useState<boolean>(false);
    const [openSnackbar,setOpenSnackbar] = useState(false)
+   const [msgSnackbar,setMsgSnackbar] = useState('') 
     
    useEffect(() => {
       (async () => {
@@ -125,6 +124,7 @@ const Settings = ()=>{
    const handleSnackBarClose = useCallback(()=>{
       setOpenSnackbar(false)
    },[])
+
    return (
       <Box className='flex flex-col gap-2 p-2'>
          <Paper className='p-2'>
@@ -142,7 +142,7 @@ const Settings = ()=>{
          />
          </Paper>
          <Snackbar open={openSnackbar} onClose={handleSnackBarClose} autoHideDuration={6000}>
-            <Alert onClose={handleSnackBarClose} severity='error' variant='filled'></Alert>
+            <Alert onClose={handleSnackBarClose} severity='error' variant='filled'>meow</Alert>
          </Snackbar>
       </Box>
    )

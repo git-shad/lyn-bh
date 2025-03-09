@@ -46,7 +46,6 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings'
 import { useEffect } from 'react'
 import db from './backend/db'
-import {firestoreDB,syncAllTables,syncFirestoreToDexie} from './pages/Settings'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -58,8 +57,6 @@ const App: React.FC = () => {
 
   useEffect(()=>{
     (async ()=>{
-      // syncAllTables()
-      // syncFirestoreToDexie()
       const tenants = await db.tenants.toArray()
       const dateNow: string = new Date().toLocaleDateString()
       tenants?.map(async (tenant) => {
