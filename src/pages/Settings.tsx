@@ -28,17 +28,18 @@ const firebaseConfig: FirebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 
-const syncAllTables = async (firestore: any) => {
-   const syncTable = async <T extends { [x: string]: any }>(table: Dexie.Table<T, any>, collectionName: string) => {
+const syncAllTables = async () => {
+   const syncTable = async <T extends { [x: string]: any }>(table: Dexie.Table<T, any>, collectionName: string, keyField: string) => {
       try {
          const items = await table.toArray();
-
+   
          for (const item of items) {
-            if (!item.id) continue;
-
-            const docRef = doc(firestore, collectionName, item.id.toString());
+            const itemId = item[keyField];
+            if (!itemId) continue;
+   
+            const docRef = doc(firestore, collectionName, itemId.toString());
             const docSnap = await getDoc(docRef);
-
+   
             if (docSnap.exists()) {
                await setDoc(docRef, item, { merge: true });
                console.log(`Updated item in ${collectionName}:`, item);
@@ -52,19 +53,22 @@ const syncAllTables = async (firestore: any) => {
       }
    };
 
-   await syncTable(dexie.tenants, 'tenants');
-   await syncTable(dexie.storage, 'storage');
-   await syncTable(dexie.history, 'history');
-   await syncTable(dexie.hebills, 'hebills');
+   await syncTable(dexie.tenants, 'tenants', 'id');
+   await syncTable(dexie.storage, 'storage', 'key');
+   await syncTable(dexie.history, 'history', 'tenant_id');
+   await syncTable(dexie.hebills, 'hebills', 'date');   
    console.log('All tables synced to Firestore');
 };
 
-const syncFirestoreToDexie = async (firestore: any) => {
-   const getAllDataAndStore = async <T extends { [x: string]: any }>(collectionName: string, table: Dexie.Table<T, any>) => {
+const syncFirestoreToDexie = async () => {
+   const getAllDataAndStore = async <T extends { [x: string]: any }>( collectionName: string, table: Dexie.Table<T, any>, keyField: string ) => {
       try {
          const querySnapshot = await getDocs(collection(firestore, collectionName));
-         const data = querySnapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() } as unknown as T));
-   
+         const data = querySnapshot.docs.map(doc => ({
+            [keyField]: doc.id, // Use the correct key field
+            ...doc.data()
+         } as unknown as T));
+
          await table.bulkPut(data);
          console.log(`Data from ${collectionName} stored in Dexie:`, data);
          return data;
@@ -74,10 +78,11 @@ const syncFirestoreToDexie = async (firestore: any) => {
       }
    };
 
-   await getAllDataAndStore('tenants', dexie.tenants);
-   await getAllDataAndStore('storage', dexie.storage);
-   await getAllDataAndStore('history', dexie.history);
-   await getAllDataAndStore('hebills', dexie.hebills);
+   // Use the correct key field for each table
+   await getAllDataAndStore('tenants', dexie.tenants, 'id');
+   await getAllDataAndStore('storage', dexie.storage, 'key');
+   await getAllDataAndStore('history', dexie.history, 'tenant_id');
+   await getAllDataAndStore('hebills', dexie.hebills, 'date');
 
    console.log('All data from Firestore synced to Dexie');
 };

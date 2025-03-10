@@ -1,6 +1,6 @@
 import { Dexie, type EntityTable } from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { syncAllTables, syncFirestoreToDexie, firestoreDB } from '../pages/Settings'
+import { syncAllTables, syncFirestoreToDexie} from '../pages/Settings'
 
 interface ElectricBill {
     amount: number
@@ -99,8 +99,8 @@ db.on('ready',async ()=>{
     const isSync = await db.settings.get('syncdb')
     const isRetrive = await db.settings.get('retrievedb')
 
-    if(isSync?.value) await syncAllTables(firestoreDB);
-    if(isRetrive?.value) await syncFirestoreToDexie(firestoreDB);
+    if(isSync?.value) await syncAllTables();
+    if(isRetrive?.value) await syncFirestoreToDexie();
 })
 
 const rentCost = async () =>{
