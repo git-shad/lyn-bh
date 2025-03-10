@@ -207,6 +207,7 @@ const BillingAndPayments: React.FC = () => {
         }
         return condi
       })
+      
       const waterBills = waterb? [...waterb, newEBills ] : [newEBills];
 
       newBalance -= oldBalance

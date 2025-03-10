@@ -26,10 +26,10 @@ const firebaseConfig: FirebaseConfig = {
 }
 
 const app = initializeApp(firebaseConfig);
-const firestoreDB = getFirestore(app);
+const firestore = getFirestore(app);
 
 const syncAllTables = async (firestore: any) => {
-   const syncTable = async <T extends { [x: string]: any }>(firestore: any, table: Dexie.Table<T, any>, collectionName: string) => {
+   const syncTable = async <T extends { [x: string]: any }>(table: Dexie.Table<T, any>, collectionName: string) => {
       try {
          const items = await table.toArray();
 
@@ -52,15 +52,15 @@ const syncAllTables = async (firestore: any) => {
       }
    };
 
-   await syncTable(firestore, dexie.tenants, 'tenants');
-   await syncTable(firestore, dexie.storage, 'storage');
-   await syncTable(firestore, dexie.history, 'history');
-   await syncTable(firestore, dexie.hebills, 'hebills');
+   await syncTable(dexie.tenants, 'tenants');
+   await syncTable(dexie.storage, 'storage');
+   await syncTable(dexie.history, 'history');
+   await syncTable(dexie.hebills, 'hebills');
    console.log('All tables synced to Firestore');
 };
 
 const syncFirestoreToDexie = async (firestore: any) => {
-   const getAllDataAndStore = async <T extends { [x: string]: any }>(firestore: any, collectionName: string, table: Dexie.Table<T, any>) => {
+   const getAllDataAndStore = async <T extends { [x: string]: any }>(collectionName: string, table: Dexie.Table<T, any>) => {
       try {
          const querySnapshot = await getDocs(collection(firestore, collectionName));
          const data = querySnapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() } as unknown as T));
@@ -74,16 +74,16 @@ const syncFirestoreToDexie = async (firestore: any) => {
       }
    };
 
-   await getAllDataAndStore(firestore, 'tenants', dexie.tenants);
-   await getAllDataAndStore(firestore, 'storage', dexie.storage);
-   await getAllDataAndStore(firestore, 'history', dexie.history);
-   await getAllDataAndStore(firestore, 'hebills', dexie.hebills);
+   await getAllDataAndStore('tenants', dexie.tenants);
+   await getAllDataAndStore('storage', dexie.storage);
+   await getAllDataAndStore('history', dexie.history);
+   await getAllDataAndStore('hebills', dexie.hebills);
 
    console.log('All data from Firestore synced to Dexie');
 };
 
 // Delete from Firestore when data is deleted from Dexie
-const deleteFromFirestore = async (firestore: any, collectionName: string, id: number) => {
+const deleteFromFirestore = async (collectionName: string, id: number) => {
    try {
       const docRef = doc(firestore, collectionName, id.toString());
       await deleteDoc(docRef);
@@ -96,8 +96,8 @@ const deleteFromFirestore = async (firestore: any, collectionName: string, id: n
 const Settings = ()=>{
    const [isSync, setIsSync] = useState<boolean>(false);
    const [isRetrieve, setIsRetrieve] = useState<boolean>(false);
-   const [openSnackbar,setOpenSnackbar] = useState(false)
-   const [msgSnackbar,setMsgSnackbar] = useState('') 
+   // const [openSnackbar,setOpenSnackbar] = useState(false)
+   // const [msgSnackbar,setMsgSnackbar] = useState('') 
     
    useEffect(() => {
       (async () => {
@@ -121,9 +121,9 @@ const Settings = ()=>{
       setIsRetrieve(checked);
    }, []);
 
-   const handleSnackBarClose = useCallback(()=>{
-      setOpenSnackbar(false)
-   },[])
+   // const handleSnackBarClose = useCallback(()=>{
+   //    setOpenSnackbar(false)
+   // },[])
 
    return (
       <Box className='flex flex-col gap-2 p-2'>
@@ -141,12 +141,12 @@ const Settings = ()=>{
             labelPlacement='end'
          />
          </Paper>
-         <Snackbar open={openSnackbar} onClose={handleSnackBarClose} autoHideDuration={6000}>
-            <Alert onClose={handleSnackBarClose} severity='error' variant='filled'>meow</Alert>
-         </Snackbar>
+         {/* <Snackbar open={openSnackbar} onClose={handleSnackBarClose} autoHideDuration={6000}>
+            <Alert onClose={handleSnackBarClose} severity='error' variant='filled'></Alert>
+         </Snackbar> */}
       </Box>
    )
 }
 
-export { syncAllTables, syncFirestoreToDexie, deleteFromFirestore,firestoreDB }
+export { syncAllTables, syncFirestoreToDexie, deleteFromFirestore}
 export default Settings

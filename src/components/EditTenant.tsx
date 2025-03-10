@@ -5,7 +5,7 @@ import {
 } from '@mui/material'
 import { IonInput } from '@ionic/react'
 import db from '../backend/db'
-import {firestoreDB, deleteFromFirestore} from '../pages/Settings'
+import {deleteFromFirestore} from '../pages/Settings'
 
 
 //icon
@@ -78,7 +78,7 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     setTimeout(async ()=>{
       if(!isDelete){
         await db.tenants.delete(id)
-        await deleteFromFirestore(firestoreDB,'tenants',id)
+        await deleteFromFirestore('tenants',id)
       }
     },1000)
   },[isDelete])
