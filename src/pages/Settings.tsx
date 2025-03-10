@@ -65,7 +65,7 @@ const syncFirestoreToDexie = async () => {
       try {
          const querySnapshot = await getDocs(collection(firestore, collectionName));
          const data = querySnapshot.docs.map(doc => ({
-            [keyField]: doc.id, // Use the correct key field
+            [keyField]: doc.id, 
             ...doc.data()
          } as unknown as T));
 
@@ -78,12 +78,10 @@ const syncFirestoreToDexie = async () => {
       }
    };
 
-   // Use the correct key field for each table
    await getAllDataAndStore('tenants', dexie.tenants, 'id');
    await getAllDataAndStore('storage', dexie.storage, 'key');
    await getAllDataAndStore('history', dexie.history, 'tenant_id');
    await getAllDataAndStore('hebills', dexie.hebills, 'date');
-
    console.log('All data from Firestore synced to Dexie');
 };
 
@@ -97,6 +95,19 @@ const deleteFromFirestore = async (collectionName: string, id: number) => {
       console.error(`Error deleting item from ${collectionName}:`, error);
    }
 };
+
+const deleteTenantAndHistory = async (id: number)=>{
+   await deleteFromFirestore('tenants', id);
+
+   // To delete tenant's history, you need to find the document(s) in the 'history' collection
+   const historyQuery = collection(firestore, 'history');
+   const historySnapshot = await getDocs(historyQuery);
+   const historyDocs = historySnapshot.docs.filter(doc => doc.data().tenant_id === id);
+
+   for (const doc of historyDocs) {
+      await deleteDoc(doc.ref);
+   }
+}
 
 const Settings = ()=>{
    const [isSync, setIsSync] = useState<boolean>(false);
@@ -153,5 +164,5 @@ const Settings = ()=>{
    )
 }
 
-export { syncAllTables, syncFirestoreToDexie, deleteFromFirestore}
+export { syncAllTables, syncFirestoreToDexie, deleteTenantAndHistory}
 export default Settings

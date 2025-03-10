@@ -99,8 +99,8 @@ db.on('ready',async ()=>{
     const isSync = await db.settings.get('syncdb')
     const isRetrive = await db.settings.get('retrievedb')
 
-    if(isSync?.value) await syncAllTables();
-    if(isRetrive?.value) await syncFirestoreToDexie();
+    if(isSync?.value) syncAllTables();
+    if(isRetrive?.value) syncFirestoreToDexie();
 })
 
 const rentCost = async () =>{

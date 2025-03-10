@@ -70,7 +70,6 @@ const Profile: React.FC = () => {
 
     (async () => {
       const tenant = await db.tenants.get(id);
-      console.log(tenant)
       if (!tenant) {
         GoTo('/tenants');
         return;
