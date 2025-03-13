@@ -85,18 +85,19 @@ const syncFirestoreToDexie = async () => {
    console.log('All data from Firestore synced to Dexie');
 };
 
-// Delete from Firestore when data is deleted from Dexie
-const deleteFromFirestore = async (collectionName: string, id: number) => {
-   try {
-      const docRef = doc(firestore, collectionName, id.toString());
-      await deleteDoc(docRef);
-      console.log(`Deleted item with id ${id} from ${collectionName}`);
-   } catch (error) {
-      console.error(`Error deleting item from ${collectionName}:`, error);
-   }
-};
 
 const deleteTenantAndHistory = async (id: number)=>{
+   // Delete from Firestore when data is deleted from Dexie
+   const deleteFromFirestore = async (collectionName: string, id: number) => {
+      try {
+         const docRef = doc(firestore, collectionName, id.toString());
+         await deleteDoc(docRef);
+         console.log(`Deleted item with id ${id} from ${collectionName}`);
+      } catch (error) {
+         console.error(`Error deleting item from ${collectionName}:`, error);
+      }
+   };
+
    await deleteFromFirestore('tenants', id);
 
    // To delete tenant's history, you need to find the document(s) in the 'history' collection

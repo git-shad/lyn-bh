@@ -87,6 +87,7 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     setIsDelete(true)
     setAlert(undefined)
   },[])
+   
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Edit Profile</DialogTitle>
