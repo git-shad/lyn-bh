@@ -35,7 +35,7 @@ const syncAllTables = async () => {
    
          for (const item of items) {
             const itemId = item[keyField];
-            if (!itemId) continue;
+            if (!itemId) continue
    
             const docRef = doc(firestore, collectionName, itemId.toString());
             const docSnap = await getDoc(docRef);
@@ -157,10 +157,7 @@ const Settings = ()=>{
             label='Retrieve Data' 
             labelPlacement='end'
          />
-         </Paper>
-         {/* <Snackbar open={openSnackbar} onClose={handleSnackBarClose} autoHideDuration={6000}>
-            <Alert onClose={handleSnackBarClose} severity='error' variant='filled'></Alert>
-         </Snackbar> */}
+         </Paper>         
       </Box>
    )
 }

@@ -12,13 +12,14 @@ import EditTenant from '../components/EditTenant';
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { accessibilityOutline, flash, home, water } from 'ionicons/icons';
+import { accessibilityOutline, filter, flash, home, water } from 'ionicons/icons';
 import PaidIcon from '@mui/icons-material/Paid';
 import { PiHandCoinsFill } from "react-icons/pi";
 import HistoryIcon from '@mui/icons-material/History';
 import DoneIcon from '@mui/icons-material/Done';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const Profile: React.FC = () => {
   const location = useLocation();
@@ -31,23 +32,42 @@ const Profile: React.FC = () => {
       const tenant = await db.tenants.get(id);
       const dateNow: string = new Date().toLocaleDateString();
       if (!tenant?.date || tenant?.balance === undefined) return;
-
-      const rentCost = await db.storage.get('rent');
-      const start = new Date(tenant.date);
+ 
+      const rentCost = (await db.storage.get('rent'))?.value  ?? 1000
+      const start = new Date(tenant?.date);
       const end = new Date(dateNow);
       const dateStack: string[] = eachDayOfInterval({ start, end }).map(date => format(date, 'M/d/yyyy'));
       const rentHistory = (await db.history.get(id))?.bills?.filter(bill => bill.label === 'rent').map(bill => bill.start_date) || [];
       const rentBills = tenant.rent_bills?.map(bill => bill.date) || [];
       const rentDateBills = dateStack.filter(date => !rentBills.includes(date) && !rentHistory.includes(date)).map(date => ({ amount: rentCost, date }));
+      
+      const singleRentBills = (Array.from(new Set(rentDateBills.map(bill => JSON.stringify(({amount: bill.amount, date: format(bill.date, 'M/yyyy')}))))).map(bill => JSON.parse(bill)))
+      const currentRentBills = tenant.rent_bills?.map(bill => ({amount: bill.amount, date: format(new Date(bill.date), 'M/yyyy') })) || [];
+      const filteredRentBills = singleRentBills.filter(bill => !currentRentBills.some(currentBill => currentBill.date === bill.date && currentBill.amount === bill.amount));
+      const finalFilteringRentBills = filteredRentBills.map(bill => {
+        const [month,year] = bill.date.split('/');
+        const date = new Date(Number(year),Number(month) - 1,end.getDate());
+        return { amount: bill.amount, date: date.toLocaleDateString() }
+      });
 
-      if (rentDateBills.length === 0 ) return;
-      const updatedRentBills = [...(tenant.rent_bills || []), ...rentDateBills];
+      if (finalFilteringRentBills.length === 0 ) return;
+      const updatedRentBills = [...(tenant.rent_bills || []), ...finalFilteringRentBills];
       const uniqueRentBills = Array.from(new Set(updatedRentBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill));
 
-      // Finalize
-      const rentCostValue = rentCost?.value ?? 1000;
-      await db.tenants.update(id, { rent_bills: uniqueRentBills, balance: (Number(tenant.balance) || 0) + (rentCostValue * rentDateBills.length) });
-    })();
+      // Finalize the rent bills
+      await db.tenants.update(id, { rent_bills: uniqueRentBills, balance: (Number(tenant.balance) || 0) + (rentCost * finalFilteringRentBills.length) });
+    })().then(async () => {
+      const tenant = await db.tenants.get(id);
+      if (!tenant) return;
+
+      const totalRent = tenant.rent_bills?.reduce((acc, bill) => acc + bill.amount, 0) || 0;
+      const totalElectric = tenant.electric_bills?.reduce((acc, bill) => acc + bill.amount, 0) || 0;
+      const totalWater = tenant.water_bills?.reduce((acc, bill) => acc + bill.amount, 0) || 0;
+
+      const newBalance = totalRent + totalElectric + totalWater;
+
+      await db.tenants.update(id, { balance: newBalance });
+    });
   }, [id]);
 
   const router = useIonRouter();
@@ -175,29 +195,61 @@ const Profile: React.FC = () => {
     return `${month} ${day}, ${year}`;
   }
 
-  // const handleAutoDeduction = useCallback(async () => {
-  //   if (!tenant || !tenant.coin || !tenant.balance) return;
-
-  //   const allBills = [...(dRent || []), ...(dWater || []), ...(dElectric || [])];
-  //   const sortedBills = allBills.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  //   for (const bill of sortedBills) {
-  //     if (tenant.coin < bill.amount) break;
-
-  //     const billType = dRent?.includes(bill) ? 'rent' : dWater?.includes(bill) ? 'water' : 'electric';
-  //     // await handleDataBills({ amount: bill.amount, date: bill.date }, billType, sortedBills.indexOf(bill));
-  //     console.log(billType)
-  //   }
-  // }, [dRent, dWater, dElectric]);
-
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback(() => {
     setOpen(prev => !prev);
   }, []);
 
+  const [openDeleteItemR,setOpenDeleteItemR] = useState<number>();
+  const [openDeleteItemW,setOpenDeleteItemW] = useState<number>();
+  const [openDeleteItemE,setOpenDeleteItemE] = useState<number>();
+  const [openDeleteItem, setOpenDeleteItem] = useState<boolean>(false);
+
+  const handleOpenDelete = useCallback((bill: string, index: number) => {
+    if(openDeleteItem){
+      setOpenDeleteItem(false);
+      setOpenDeleteItemR(undefined);
+      setOpenDeleteItemW(undefined);
+      setOpenDeleteItemE(undefined);
+      return;
+    }
+
+    if(bill === 'rent'){
+      setOpenDeleteItemR(index);
+    }else if(bill === 'water'){
+      setOpenDeleteItemW(index);
+    }else if(bill === 'electric'){
+      setOpenDeleteItemE(index);
+    }
+    setOpenDeleteItem(true);
+  },[openDeleteItem])
+
+  const handleDeleteItem = useCallback(async (data: {amount: number, date: string},bill: string, index: number)=>{
+    const amount = !isNaN(data.amount) ? data.amount : 0;
+
+    if(bill === 'rent' && tenant?.balance){
+      await db.tenants.update(id,{
+        rent_bills: dRent?.filter((_,i)=> i !== index),
+        balance: tenant.balance - amount
+      })
+
+    }else if(bill === 'water' && tenant?.balance){
+      await db.tenants.update(id,{
+        water_bills: dWater?.filter((_,i)=> i !== index),
+        balance: tenant.balance - amount
+      })
+    
+    }else if(bill === 'electric' && tenant?.balance){
+      await db.tenants.update(id,{
+        electric_bills: dElectric?.filter((_,i)=> i !== index),
+        balance: tenant.balance - amount
+      })
+    } 
+  },[id, tenant, dRent, dWater, dElectric])
+
   return (
     <IonContent>
-      <IonItem lines='none' className='sticky top-0 bg-transparent'>
+      <IonItem lines='none' className='sticky top-0 bg-transparent z-20'>
         <Link to='/tenants'>
           <IconButton slot='start'><KeyboardArrowLeftIcon className='text-blue-500' /></IconButton>
         </Link>
@@ -243,9 +295,6 @@ const Profile: React.FC = () => {
             <IonCol className='flex justify-end mt-2'>
               <Box className='flex flex-row gap-2'>
                 <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
-                {/* {!isAddCoin && (
-                  <IconButton onClick={handleAutoDeduction} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><AutorenewIcon /></SvgIcon></IconButton>
-                )} */}
                 <IconButton onClick={() => setIsAddCoin(!isAddCoin)} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><PiHandCoinsFill /></SvgIcon></IconButton>
                 {isAddCoin && (
                   <IconButton onClick={handleAddCoin} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DoneIcon /></IconButton>
@@ -266,14 +315,21 @@ const Profile: React.FC = () => {
               </IonItem>
               <IonList slot='content' lines='none'>
                 {dRent?.map((data,index) => (
-                  <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
-                    <Box className='row-span-1'>Amount: <Box className='font-semibold'>{data?.amount}</Box></Box>
-                    <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
-                    <Box className='row-span-1 flex justify-end'>
-                      <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'rent', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
+                    <Box key={index} onClick={()=>{ handleOpenDelete('rent',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
+                      { openDeleteItemR === index && (
+                        <Box className='row-span-1 flex justify-end'>
+                          <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'rent', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
+                        </Box>
+                      )}
+                      <Box className='row-span-1'>Amount: <span className='font-semibold'>{(data?.amount).toString()}</span></Box>
+                      <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
+                      { openDeleteItemR !== index && (
+                        <Box className='row-span-1 flex justify-end'>
+                          <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'rent', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
+                        </Box>
+                      )}
                     </Box>
-                  </Box>
-                ))}
+                  ))}
               </IonList>
             </IonAccordion>
             <IonAccordion value='water' >
@@ -283,12 +339,19 @@ const Profile: React.FC = () => {
               </IonItem>
               <IonList slot='content' lines='none'>
                 {dWater?.map((data,index) => (
-                  <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
-                    <Box className='row-span-1'>Amount: <Box className='font-semibold'>{data?.amount}</Box></Box>
-                    <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
+                  <Box key={index} onClick={()=>{ handleOpenDelete('water',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
+                  { openDeleteItemW === index && (
+                    <Box className='row-span-1 flex justify-end'>
+                      <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'Water', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
+                    </Box>
+                  )}
+                  <Box className='row-span-1'>Amount: <span className='font-semibold'>{(data?.amount).toString()}</span></Box>
+                  <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
+                  { openDeleteItemW !== index && (
                     <Box className='row-span-1 flex justify-end'>
                       <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'water', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
                     </Box>
+                  )}
                   </Box>
                 ))}
               </IonList>
@@ -300,12 +363,19 @@ const Profile: React.FC = () => {
               </IonItem>
               <IonList slot='content' lines='none'>
                 {dElectric?.map((data,index) => (
-                  <Box key={index} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
-                    <Box className='row-span-1'>Amount: <Box className='font-semibold'>{data?.amount}</Box></Box>
-                    <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
+                  <Box key={index} onClick={()=>{ handleOpenDelete('electric',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
+                  { openDeleteItemE === index && (
+                    <Box className='row-span-1 flex justify-end'>
+                      <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'electric', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
+                    </Box>
+                  )}
+                  <Box className='row-span-1'>Amount: <span className='font-semibold'>{(data?.amount).toString()}</span></Box>
+                  <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
+                  { openDeleteItemE !== index && (
                     <Box className='row-span-1 flex justify-end'>
                       <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'electric', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
                     </Box>
+                  )}
                   </Box>
                 ))}
               </IonList>

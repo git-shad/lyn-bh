@@ -45,7 +45,6 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
     const coin = await rentCost()
 
     if(amount >= coin){
-      console.log(balance)
       amount = amount - coin
       setAmount(amount)
       setBalance(0)

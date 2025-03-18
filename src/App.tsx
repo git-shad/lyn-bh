@@ -44,8 +44,10 @@ import Tenants from './pages/Tenants';
 import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import db from './backend/db'
+import {ThreeDot} from 'react-loading-indicators'
+import { syncAllTables, syncFirestoreToDexie} from './pages/Settings'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -54,29 +56,31 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 const App: React.FC = () => {
+  const [isBusy, setIsBusy] = useState(true);
 
-  useEffect(()=>{
-    (async ()=>{
-      const tenants = await db.tenants.toArray()
-      const dateNow: string = new Date().toLocaleDateString()
-      tenants?.map(async (tenant) => {
-        if (tenant.id !== undefined && tenant.balance !== undefined) {
-          const rentH = (await db.history.get(tenant.id))?.bills?.filter(bill => bill.label === 'rent')
-          const rentB = tenant.rent_bills
+  useEffect(() => {
+    const fetchData = async () => {
+      const [isSync, isRetrieve] = await Promise.all([
+        db.settings.get('syncdb'),
+        db.settings.get('retrievedb')
+      ]);
 
-          //add rent payment if not exists in history and rent bill
-          if(!rentH?.find(date => date.start_date === dateNow) && !rentB?.find(date => date.date === dateNow)){
-            const rentCost = 1000
-            const rent = tenant.rent_bills ? [...(tenant.rent_bills || []), { amount: rentCost, date: dateNow }] : [{ amount: rentCost, date: dateNow }]
-            const single = Array.from(new Set(rent?.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill))
-            console.log(single)
-            await db.tenants.update(tenant.id,{rent_bills: rent,balance: (tenant.balance + rentCost)})
-          } 
-      }
-    })
-    })()
-  },[])
+      if (isSync?.value) await syncAllTables();
+      if (isRetrieve?.value) await syncFirestoreToDexie();
+      setIsBusy(false);
+    };
 
+    fetchData();
+  }, []);
+
+  if (isBusy) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <ThreeDot variant="bounce" color="#3183cc" size="large" text="loading..." textColor="" />
+      </div>
+    )
+  }
+   
   return (
     <IonReactRouter>
       <IonMenu id='main-menu' contentId='main' type='overlay'>
@@ -112,14 +116,14 @@ const App: React.FC = () => {
             </IonToolbar>
           </IonHeader>
           <IonContent>
-          <IonRouterOutlet>
-            <Route path="/dashboard" exact component={Dashboard}/>
-            <Route path="/" exact render={()=><Redirect to='/dashboard'/>}/>
-            <Route path="/tenants" exact component={Tenants}/>
-            <Route path="/tenants/profile" exact component={Profile}/>
-            <Route path="/payments" exact component={BillingAndPayments}/>
-            <Route path="/settings" exact component={Settings}/>
-          </IonRouterOutlet>
+            <IonRouterOutlet>
+              <Route path="/dashboard" exact component={Dashboard}/>
+              <Route path="/" exact render={()=><Redirect to='/dashboard'/>}/>
+              <Route path="/tenants" exact component={Tenants}/>
+              <Route path="/tenants/profile" exact component={Profile}/>
+              <Route path="/payments" exact component={BillingAndPayments}/>
+              <Route path="/settings" exact component={Settings}/>
+            </IonRouterOutlet>
           </IonContent>
         </IonPage>
       </IonApp>
@@ -128,3 +132,5 @@ const App: React.FC = () => {
 }
 
 export default App;
+
+

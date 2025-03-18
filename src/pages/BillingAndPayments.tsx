@@ -184,12 +184,7 @@ const BillingAndPayments: React.FC = () => {
 
     const divide: number = tenants ? (waterAmount / tenants.length) : 0;
     const roundOf: number = Math.round(divide);
-    const dateNow: string = new Date().toLocaleDateString();
-
-    // tenants?.map(async (tenant) => {
-    //   const water = tenant.water_bills ? [...tenant.water_bills, { amount: roundOf, date: dateNow }] : [{ amount: roundOf, date: dateNow }];
-    //   await db.tenants.update(tenant.id, { water_bills: water, balance: (Number(tenant.balance) + Number(roundOf)) });
-    // });
+    const dateNow: string = new Date().toLocaleDateString(); 
 
     const date = new Date(dateNowR);
     tenants?.forEach(async (tenant) => {
@@ -207,7 +202,7 @@ const BillingAndPayments: React.FC = () => {
         }
         return condi
       })
-      
+       
       const waterBills = waterb? [...waterb, newEBills ] : [newEBills];
 
       newBalance -= oldBalance

@@ -21,24 +21,50 @@ const Tenants: React.FC = () => {
     }
   }, [tenants]);
 
+  const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback(() => {
     setOpen(prev => !prev);
   }, []);
 
-  const handleSearchInput = useCallback((e: any) => {
-    const search = e.target.value;
+  useEffect(() => {
+    if (tenants) {
+      const fetchPreviousSearch = async () => {
+      const previousSearch = await db.settings.get({ key: 'searched' });
+      if (previousSearch?.value) {
+        handleSearchInput(previousSearch.value);
+      } else {
+        setData(tenants);
+      }
+      };
+      fetchPreviousSearch();
+    }
+  }, [tenants]);
+
+  useEffect(() => {
+    if (search !== '') {
+      db.settings.put({ key: 'searched', value: search });
+    }
+  }, [search]);
+
+  const handleSearchInput = useCallback((search: string) => {
     if (search) {
-      const filtered = tenants?.filter((tenant) => tenant.name?.toLowerCase().includes(search.toLowerCase()));
+      const filtered = tenants?.filter((tenant) => {
+        const regex = new RegExp(search.replace('*', '.*'), 'i'); // Updated to match any part of the string
+        return regex.test(tenant.name ?? '') || tenant.room?.toLowerCase() === search.toLowerCase();
+      });
       setData(filtered);
+      setSearch(search);
     } else {
       setData(tenants);
+      setSearch('');
     }
-  },[tenants]);
+  }, [tenants]);
+
   return (
     <>
       <IonContent>
-        <IonSearchbar onIonInput={handleSearchInput} className='sticky top-0 z-10 text-blue-500'/>
+        <IonSearchbar value={search} onIonInput={(e: CustomEvent)=> handleSearchInput((e.target as HTMLInputElement).value)} className='sticky top-0 z-10 text-blue-500'/>
         <IonList className=''>
           {data?.map((tenant) => (
             <IonItem key={tenant.id}>
