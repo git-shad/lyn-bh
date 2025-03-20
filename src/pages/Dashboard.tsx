@@ -26,7 +26,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box className='overflow-auto p-4'>
-      <Box className='rounded-2xl p-4 flex flex-col gap-2 mb-10'>
+      <Box className='rounded-2xl p-4 flex flex-col gap-2 mb-10 ' style={{ backgroundColor: '#131c2b' }}>
         <Box className='flex justify-center m-4'> 
           <img src={logo} className='' width={200} height={200}/>
         </Box>
@@ -47,16 +47,16 @@ const Dashboard: React.FC = () => {
         </Box>
       </Box>
       <Box className='grid grid-cols-3 m-2 mb-5'>
-        <Box className='col-span-2 text-3xl font-bold'>LYN BORDING HOUSE</Box>
+        <Box className='col-span-2 text-3xl font-extrabold' style={{ color: '#131c2b' }}>LYN BORDING HOUSE</Box>
       </Box>
       <Box className='flex flex-rows gap-4'>
-        <Box onClick={()=>{GoTo('/tenants')}} className='grid grid-cols-3 gap-4 w-full bg-slate-300 text-black rounded-2xl p-4 shadow-md'>
+        <Box onClick={()=>{GoTo('/tenants')}} className='grid grid-cols-3 gap-4 w-full bg-blue-400 rounded-2xl p-4 shadow-md'>
           <Box className='col-span-1 flex justify-center items-center'>
             <FaHouseChimneyUser className='size-8'/>
           </Box>
           <Box className='col-span-2 font-semibold'>Tenants</Box>
         </Box>
-        <Box onClick={()=>{GoTo('/payments')}} className='grid grid-cols-3 gap-4 w-full bg-slate-300 text-black rounded-2xl p-4 shadow-md'>
+        <Box onClick={()=>{GoTo('/payments')}} className='grid grid-cols-3 gap-4 w-full bg-blue-400 rounded-2xl p-4 shadow-md'>
           <Box className='col-span-1 flex justify-center items-center'>
             <MdPayments className='size-10'/>
           </Box>

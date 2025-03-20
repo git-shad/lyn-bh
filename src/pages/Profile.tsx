@@ -12,7 +12,7 @@ import EditTenant from '../components/EditTenant';
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { accessibilityOutline, filter, flash, home, water } from 'ionicons/icons';
+import { accessibilityOutline, filter, filterCircle, flash, home, water } from 'ionicons/icons';
 import PaidIcon from '@mui/icons-material/Paid';
 import { PiHandCoinsFill } from "react-icons/pi";
 import HistoryIcon from '@mui/icons-material/History';
@@ -34,7 +34,7 @@ const Profile: React.FC = () => {
       if (!tenant?.date || tenant?.balance === undefined) return;
  
       const rentCost = (await db.storage.get('rent'))?.value  ?? 1000
-      const start = new Date(tenant?.date);
+      const start = new Date(tenant.date);
       const end = new Date(dateNow);
       const dateStack: string[] = eachDayOfInterval({ start, end }).map(date => format(date, 'M/d/yyyy'));
       const rentHistory = (await db.history.get(id))?.bills?.filter(bill => bill.label === 'rent').map(bill => bill.start_date) || [];
@@ -43,12 +43,17 @@ const Profile: React.FC = () => {
       
       const singleRentBills = (Array.from(new Set(rentDateBills.map(bill => JSON.stringify(({amount: bill.amount, date: format(bill.date, 'M/yyyy')}))))).map(bill => JSON.parse(bill)))
       const currentRentBills = tenant.rent_bills?.map(bill => ({amount: bill.amount, date: format(new Date(bill.date), 'M/yyyy') })) || [];
-      const filteredRentBills = singleRentBills.filter(bill => !currentRentBills.some(currentBill => currentBill.date === bill.date && currentBill.amount === bill.amount));
+      const filteredRentBills = singleRentBills.filter(bill => !currentRentBills.some(currentBill => currentBill.date === bill.date && currentBill.amount === bill.amount))
+      
+      const filteredRentHistory = rentHistory.map(date => format(date, 'M/yyyy'))//temp 
+
       const finalFilteringRentBills = filteredRentBills.map(bill => {
         const [month,year] = bill.date.split('/');
         const date = new Date(Number(year),Number(month) - 1,end.getDate());
         return { amount: bill.amount, date: date.toLocaleDateString() }
       });
+
+      console.log(finalFilteringRentBills,filteredRentBills,filteredRentHistory, rentHistory)
 
       if (finalFilteringRentBills.length === 0 ) return;
       const updatedRentBills = [...(tenant.rent_bills || []), ...finalFilteringRentBills];
@@ -172,6 +177,7 @@ const Profile: React.FC = () => {
 
   const [isAddCoin, setIsAddCoin] = useState<boolean>(false);
   const [inputCoin, setInputCoin] = useState<number>();
+
   const handleAddCoin = useCallback(async () => {
     if ((tenant === undefined || tenant?.coin === undefined) || isNaN(Number(inputCoin))) return;
     const sum = (Number(tenant?.coin) + Number(inputCoin));
@@ -232,13 +238,12 @@ const Profile: React.FC = () => {
         rent_bills: dRent?.filter((_,i)=> i !== index),
         balance: tenant.balance - amount
       })
-
     }else if(bill === 'water' && tenant?.balance){
+      console.log('test')
       await db.tenants.update(id,{
         water_bills: dWater?.filter((_,i)=> i !== index),
         balance: tenant.balance - amount
       })
-    
     }else if(bill === 'electric' && tenant?.balance){
       await db.tenants.update(id,{
         electric_bills: dElectric?.filter((_,i)=> i !== index),
@@ -257,7 +262,7 @@ const Profile: React.FC = () => {
       </IonItem>
       <Box className='m-4'>
         <Box className='w-full' >
-          <IonGrid className='border border-blue-500 rounded-xl p-4'>
+          <IonGrid className='border border-blue-500 rounded-xl px-4 py-9' style={{ backgroundColor: '#131c2b' }}>
             <IonRow className='m-2 mb-10 w-full flex justify-center'>
               <Box className='flex-col text-center'>
                 <Box className='font-bold text-3xl'>{tenant?.name}</Box>
@@ -306,7 +311,7 @@ const Profile: React.FC = () => {
       </IonItem>
       <IonItem lines='none' className='mt-4' hidden={isHidden}>
         <Box className='flex flex-col w-full'>
-          <Box className='font-semibold'>utillity bills</Box>
+          <Box className='font-semibold text-lg' style={{ color: '#131c2b' }}>Utility Bills</Box>
           <IonAccordionGroup expand='inset'>
             <IonAccordion value='rent'>
               <IonItem slot='header' color='light'>
@@ -315,7 +320,7 @@ const Profile: React.FC = () => {
               </IonItem>
               <IonList slot='content' lines='none'>
                 {dRent?.map((data,index) => (
-                    <Box key={index} onClick={()=>{ handleOpenDelete('rent',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
+                    <Box style={{ backgroundColor: '#131c2b' }} key={index} onClick={()=>{ handleOpenDelete('rent',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
                       { openDeleteItemR === index && (
                         <Box className='row-span-1 flex justify-end'>
                           <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'rent', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
@@ -339,10 +344,10 @@ const Profile: React.FC = () => {
               </IonItem>
               <IonList slot='content' lines='none'>
                 {dWater?.map((data,index) => (
-                  <Box key={index} onClick={()=>{ handleOpenDelete('water',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
+                  <Box style={{ backgroundColor: '#131c2b' }} key={index} onClick={()=>{ handleOpenDelete('water',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
                   { openDeleteItemW === index && (
                     <Box className='row-span-1 flex justify-end'>
-                      <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'Water', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
+                      <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'w ater', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
                     </Box>
                   )}
                   <Box className='row-span-1'>Amount: <span className='font-semibold'>{(data?.amount).toString()}</span></Box>
@@ -363,7 +368,7 @@ const Profile: React.FC = () => {
               </IonItem>
               <IonList slot='content' lines='none'>
                 {dElectric?.map((data,index) => (
-                  <Box key={index} onClick={()=>{ handleOpenDelete('electric',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
+                  <Box style={{ backgroundColor: '#131c2b' }} key={index} onClick={()=>{ handleOpenDelete('electric',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
                   { openDeleteItemE === index && (
                     <Box className='row-span-1 flex justify-end'>
                       <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'electric', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
@@ -384,10 +389,10 @@ const Profile: React.FC = () => {
         </Box>
       </IonItem>
       {isHidden && (
-        <IonList lines='none' className='m-4 flex flex-col'>
-          <Box className='font-bold text-2xl my-2'>History List</Box>
+        <IonList lines='none' className='m-4 flex flex-col' >
+          <Box className='font-bold text-2xl my-2' style={{ color: '#131c2b' }}>History List</Box>
           {history?.bills && history.bills.map((bill, index) => bill.amount !== 0 && bill.start_date !== '' ? (
-            <Box key={index} className='flex flex-col border rounded-md p-2 m-2'>
+            <Box key={index} className='flex flex-col border rounded-md p-2 m-2' style={{ backgroundColor: '#131c2b' }}>
               <Box className='font-bold uppercase '>{bill.label}</Box>
               <Box className='flex flex-col mx-2'>
                 <Box>{formatDate(bill.start_date)}</Box>

@@ -80,9 +80,10 @@ db.version(27).stores({
 })
 
 // First run when database is created
-const initialData = async ()=>{
+db.on('populate', async ()=>{
     await db.settings.add({key: 'syncdb', value: false})
     await db.settings.add({key: 'retrievedb', value: false})
+    await db.settings.add({key: 'resetrecord', value: false})
     await db.settings.add({key: 'searched', value: ''})
     await db.storage.add({key: 'rent', value: 1000})
     await db.storage.add({key: 'rate', value: 8.5907})
@@ -93,9 +94,7 @@ const initialData = async ()=>{
     const rooms = ['ROOM N1','ROOM N2','ROOM N3','ROOM N4','ROOM N5','ROOM N6','ROOM N7','ROOM N8','ROOM N9&10','ROOM N11','ROOM N12','ROOM N13','ROOM N14']
     await db.storage.add({key: 'rooms', value: rooms})
     rooms.map(async (room)=> await db.storage.add({key: room, value: 0})) 
-}
-
-db.on('populate',initialData)
+})
 
 const rentCost = async (): Promise<number> => {
     const rentSetting = await db.settings.get('rent');

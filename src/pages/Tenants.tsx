@@ -58,6 +58,7 @@ const Tenants: React.FC = () => {
     } else {
       setData(tenants);
       setSearch('');
+      db.settings.put({ key: 'searched', value: '' });
     }
   }, [tenants]);
 

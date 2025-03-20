@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Box,FormControlLabel,Switch, Paper, Snackbar, Alert } from '@mui/material'
+import { Box,FormControlLabel,Switch, Paper, Button } from '@mui/material'
 import { db as dexie } from '../backend/db'
 import { Dexie } from 'dexie'
 import { initializeApp } from "firebase/app";
 import { collection, doc, setDoc, getDoc, getDocs, getFirestore, deleteDoc } from 'firebase/firestore';
+
+//icon
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 interface FirebaseConfig {
    apiKey: string;
@@ -110,11 +113,33 @@ const deleteTenantAndHistory = async (id: number)=>{
    }
 }
 
+const handleResetTenantRecord = async ()=>{
+   const db = dexie
+   const tenants = await db.tenants.toArray();
+   const history = await db.history.toArray();
+   const rooms = (await db.storage.get('rooms'))?.value;
+   console.log(rooms)
+
+   for (const tenant of tenants) {
+      await db.tenants.update(tenant.id, { balance: 0, coin: 0, rent_bills: [], water_bills: [], electric_bills: [] });
+   }
+
+   for (const record of history) {
+      await db.history.update(record.tenant_id, { bills: [] });
+   }
+
+   rooms?.map((room: string) => {
+      db.storage.update(room, { value: 0 });
+   });
+
+   await db.hebills.clear();
+   console.log('Tenant records reset');
+}
+
 const Settings = ()=>{
    const [isSync, setIsSync] = useState<boolean>(false);
    const [isRetrieve, setIsRetrieve] = useState<boolean>(false);
-   // const [openSnackbar,setOpenSnackbar] = useState(false)
-   // const [msgSnackbar,setMsgSnackbar] = useState('') 
+   const [isResetRecord, setIsResetRecord] = useState<boolean>(false)
     
    useEffect(() => {
       (async () => {
@@ -136,11 +161,15 @@ const Settings = ()=>{
       const { checked } = event.target;
       await dexie.settings.update('retrievedb', { value: checked });
       setIsRetrieve(checked);
+   }, []); 
+
+   const handleResetRecord = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { checked } = event.target;
+      await dexie.settings.update('resetrecord', { value: checked });
+      setIsResetRecord(checked);
    }, []);
 
-   // const handleSnackBarClose = useCallback(()=>{
-   //    setOpenSnackbar(false)
-   // },[])
+   
 
    return (
       <Box className='flex flex-col gap-2 p-2'>
@@ -157,10 +186,18 @@ const Settings = ()=>{
             label='Retrieve Data' 
             labelPlacement='end'
          />
-         </Paper>         
+         </Paper>
+         <Paper className='p-2'>
+            <FormControlLabel 
+               control={<Switch checked={isResetRecord} onChange={handleResetRecord} />} 
+               label='Reset Tenant Record' 
+               labelPlacement='end'
+            />
+            {/* <Button onClick={handleResetTenantRecord} size='large' fullWidth sx={{justifyContent: 'left', textTransform: 'none'}} startIcon={<RestartAltIcon/>}>Reset Tenant Record</Button> */}
+         </Paper>
       </Box>
    )
 }
 
-export { syncAllTables, syncFirestoreToDexie, deleteTenantAndHistory}
+export { syncAllTables, syncFirestoreToDexie, deleteTenantAndHistory, handleResetTenantRecord}
 export default Settings

@@ -44,10 +44,10 @@ import Tenants from './pages/Tenants';
 import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import db from './backend/db'
 import {ThreeDot} from 'react-loading-indicators'
-import { syncAllTables, syncFirestoreToDexie} from './pages/Settings'
+import { syncAllTables, syncFirestoreToDexie, handleResetTenantRecord} from './pages/Settings'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -60,13 +60,15 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [isSync, isRetrieve] = await Promise.all([
+      const [isSync, isRetrieve, isResetrecord] = await Promise.all([
         db.settings.get('syncdb'),
-        db.settings.get('retrievedb')
+        db.settings.get('retrievedb'),
+        db.settings.get('resetrecord')
       ]);
 
       if (isSync?.value) await syncAllTables();
       if (isRetrieve?.value) await syncFirestoreToDexie();
+      if (isResetrecord?.value) await handleResetTenantRecord();
       setIsBusy(false);
     };
 
@@ -86,7 +88,7 @@ const App: React.FC = () => {
       <IonMenu id='main-menu' contentId='main' type='overlay'>
         <IonHeader>
           <IonToolbar>
-            <IonTitle>Menu</IonTitle>
+            <IonTitle style={{ color: '#131c2b' }} slot='end'>Menu</IonTitle>
           </IonToolbar>
         </IonHeader>
         <IonContent>
