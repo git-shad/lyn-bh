@@ -55,9 +55,9 @@ const EHistory:React.FC<Props> = ({open,onClose})=>{
       const dateParts = date.split('/');
       const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       const month = monthNames[parseInt(dateParts[0], 10) - 1];
-      const day = parseInt(dateParts[1], 10);
+      // const day = parseInt(dateParts[1], 10);
       const year = parseInt(dateParts[2], 10);
-      return `${month} ${day}, ${year}`;
+      return `${month}, ${year}`;
    }
 
    const [openDate, setOpenDate] = useState<boolean>(false)

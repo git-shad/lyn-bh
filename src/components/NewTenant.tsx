@@ -98,7 +98,7 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
     if (id !== undefined) {
       await db.tenants.update(id, tenant).then(async ()=>{
         if(id !== undefined){
-          await db.history.update(id,{bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: ''}]})
+          await db.history.update(id,{bills: rent !== 0 ? [{label: 'rent',amount: rent, start_date: startDate as string,end_date: getDate()}] : []})
         }
       }).catch(async (err: any) => {
         console.error(err);
@@ -106,7 +106,7 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
     } else {
       await db.tenants.add(tenant).then(async (newId) => {
         if(newId !== undefined){
-          await db.history.add({tenant_id: newId,bills: [{label: 'rent',amount: rent, start_date: startDate as string,end_date: getDate()}]})
+          await db.history.add({tenant_id: newId,bills: rent !== 0 ? [{label: 'rent',amount: rent, start_date: startDate as string,end_date: getDate()}] : []})
         }
         setId(newId);
         setIsOpen(true);

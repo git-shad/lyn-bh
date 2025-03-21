@@ -33,6 +33,7 @@ const MDate: FC<Props> = ({ open, onClose, result, presentation }) => {
     const month = monthNames[parseInt(dateParts[0], 10) - 1];
     const day = parseInt(dateParts[1], 10);
     const year = parseInt(dateParts[2], 10);
+    if(presentation === 'month-year') return`${month}, ${year}`;
     return `${month} ${day}, ${year}`;
   }
 

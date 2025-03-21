@@ -43,17 +43,16 @@ const Profile: React.FC = () => {
       
       const singleRentBills = (Array.from(new Set(rentDateBills.map(bill => JSON.stringify(({amount: bill.amount, date: format(bill.date, 'M/yyyy')}))))).map(bill => JSON.parse(bill)))
       const currentRentBills = tenant.rent_bills?.map(bill => ({amount: bill.amount, date: format(new Date(bill.date), 'M/yyyy') })) || [];
-      const filteredRentBills = singleRentBills.filter(bill => !currentRentBills.some(currentBill => currentBill.date === bill.date && currentBill.amount === bill.amount))
-      
+      const filteredRentBills = singleRentBills.filter(bill => !currentRentBills.some(currentBill => currentBill.date === bill.date && currentBill.amount === bill.amount)) 
       const filteredRentHistory = rentHistory.map(date => format(date, 'M/yyyy'))//temp 
-
-      const finalFilteringRentBills = filteredRentBills.map(bill => {
+      const filterOnlyOneDate = filteredRentBills.filter(only => !filteredRentHistory.includes(only.date))
+      const finalFilteringRentBills = filterOnlyOneDate.map(bill => {
         const [month,year] = bill.date.split('/');
         const date = new Date(Number(year),Number(month) - 1,end.getDate());
         return { amount: bill.amount, date: date.toLocaleDateString() }
       });
 
-      console.log(finalFilteringRentBills,filteredRentBills,filteredRentHistory, rentHistory)
+      console.log(finalFilteringRentBills,filteredRentBills,filteredRentHistory, rentHistory, filterOnlyOneDate)
 
       if (finalFilteringRentBills.length === 0 ) return;
       const updatedRentBills = [...(tenant.rent_bills || []), ...finalFilteringRentBills];
