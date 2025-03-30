@@ -28,6 +28,7 @@ interface TenantHistory{
 }
 
 interface TableElectricBillHistory {
+    id?:number
     date: string
     room: string
     past: number
@@ -67,7 +68,7 @@ const db = new Dexie('tenantDB') as Dexie & {
     tenants: EntityTable<Tenant,'id'>
     history: EntityTable<TenantHistory,'tenant_id'>
     storage: EntityTable<Storage,'key'>
-    hebills: EntityTable<TableElectricBillHistory,'date'>
+    hebills: EntityTable<TableElectricBillHistory,'id'>
     settings: EntityTable<Settings,'key'>
 }
 
@@ -75,7 +76,7 @@ db.version(27).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills',
     history: 'tenant_id,*TenantBills',
     storage: 'key,value',
-    hebills: 'date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal',
+    hebills: '++id, &date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal',
     settings: 'key,value'
 })
 
@@ -95,6 +96,7 @@ db.on('populate', async ()=>{
     await db.storage.add({key: 'rooms', value: rooms})
     rooms.map(async (room)=> await db.storage.add({key: room, value: 0})) 
 })
+
 
 const rentCost = async (): Promise<number> => {
     const rentSetting = await db.settings.get('rent');

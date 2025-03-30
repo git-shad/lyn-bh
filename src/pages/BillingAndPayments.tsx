@@ -61,19 +61,11 @@ const BillingAndPayments: React.FC = () => {
     setTotalFinal(0);
   }, [personCount]);
 
-  // select room first
-  useEffect(() => {
-    if (rooms.length > 0) {
-      const e = { target: { value: rooms[0] } } as SelectChangeEvent;
-      handleInputRoom(e);
-    }
-  }, [rooms]);
-
   // setup and initialize
   useEffect(() => {
     (async () => {
       if (tenants) {
-        const rooms: [] = (await db.storage.get('rooms'))?.value;
+        const rooms: string[] = (await db.storage.get('rooms'))?.value;
         const room: string[] = [];
         const optProfile: {label: string, id: number}[] = []
         const roomCount: { [room: string]: number } = {};
@@ -96,7 +88,8 @@ const BillingAndPayments: React.FC = () => {
           }
         })
 
-        setRooms(rooms.filter(r => Array.from(new Set(room)).includes(r)));
+        const sortRooms = rooms.filter(r => Array.from(new Set(room)).includes(r))
+        setRooms(sortRooms);
         setPersonCount(roomCount);
         setOptProfile(optProfile)
       }
@@ -246,11 +239,11 @@ const BillingAndPayments: React.FC = () => {
   const [open, setOpen] = useState(false);
 
   const handleElecticAmount = useCallback(async () => {
+    let line = 0
     if (past > 0 && present > 0 && isElectricBillApprove) {
       await db.storage.update(room, { value: Number(present) });
       await db.storage.update('rate', { value: rate });
       await db.storage.update('tax', { value: tax });
-
       setIsElectricMsgShow(true);
 
       const tableRow: TableData = {
@@ -268,15 +261,16 @@ const BillingAndPayments: React.FC = () => {
         roundOffFinal: totalFinal
       };
 
-      const existingBill = await db.hebills.get(tableRow.date);
+
+      const existingBill = await db.hebills.where('room').equals(tableRow.room).and((bill) => (new Date(bill.date)).getMonth() === (new Date(tableRow.date)).getMonth() && (new Date(bill.date)).getFullYear() === (new Date(tableRow.date)).getFullYear()).first();
       const [e_month,,e_year] = existingBill?.date?.split('/') || [];
-      const [t_month,,t_year] = tableRow.date.split('/')
-      const isExistDate = e_month === t_month && e_year === t_year
+      const [t_month,,t_year] = tableRow.date.split('/');
+      const isExistDate = e_month === t_month && e_year === t_year;
       
       if (!existingBill || existingBill.room !== tableRow.room || !isExistDate) {
         await db.hebills.add(tableRow);
       } else {
-        await db.hebills.update(existingBill.date, tableRow);
+        await db.hebills.update(existingBill?.id, tableRow);
       }
 
       const date = new Date(tableRow.date)
@@ -285,7 +279,6 @@ const BillingAndPayments: React.FC = () => {
         let newEBills = { amount: totalFinal, date: dateNowE }
         let newBalance = tenant?.balance || 0
 
-        
         const electricb = tenant?.electric_bills?.filter(item => {
           const [month,,year] = item.date.split('/')
           const condi = month !== (date.getMonth() + 1).toString() && year === (date.getFullYear()).toString()
@@ -313,11 +306,22 @@ const BillingAndPayments: React.FC = () => {
         setIsElectricMsgShow(false);
       }, 5000);
 
+      const currentIndex = rooms.indexOf(room);
+      const nextIndex = (currentIndex + 1) % rooms.length;
+      const e = { target: { value: rooms[nextIndex] } } as SelectChangeEvent;
+      handleInputRoom(e);
     } else {
       setIsElectricBillApprove(true);
     }
   }, [past, present, tax, rate, isElectricBillApprove, room, tenantSelected, totalFinal, count, usage, total, dateNowE]);
 
+  useEffect(()=>{
+    if(rooms.length > 0){
+      const e = { target: { value: rooms[0] } } as SelectChangeEvent;
+      handleInputRoom(e);
+    }
+  },[rooms])
+  
   const handleIsHideElectric = useCallback(()=>{
     setIsElectricShow( hide => {
       const change = !hide
@@ -426,11 +430,9 @@ const BillingAndPayments: React.FC = () => {
               <FormControl variant='standard' className='w-full m-1'>
                 <InputLabel>Tenant Room</InputLabel>
                 <Select label="Room Number" value={room} onChange={handleInputRoom}>
-                  {
-                    rooms.map((room, index) => (
+                  {rooms.map((room, index) => (
                       <MenuItem key={index} value={room}>{room}</MenuItem>
-                    ))
-                  }
+                  ))}
                 </Select>
               </FormControl>
               <IonInput onFocus={handleFocus} value={past} onIonInput={(e: any) => setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />

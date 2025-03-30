@@ -4,6 +4,7 @@ import { db as dexie } from '../backend/db'
 import { Dexie } from 'dexie'
 import { initializeApp } from "firebase/app";
 import { collection, doc, setDoc, getDoc, getDocs, getFirestore, deleteDoc } from 'firebase/firestore';
+import { isOnline } from '../backend/Online'
 
 //icon
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -56,6 +57,12 @@ const syncAllTables = async () => {
       }
    };
 
+   const isConnected = await isOnline();
+   if (!isConnected) {
+      console.log('No internet connection. Syncing to Firestore is skipped.');
+      return;
+   }
+   
    await syncTable(dexie.tenants, 'tenants', 'id');
    await syncTable(dexie.storage, 'storage', 'key');
    await syncTable(dexie.history, 'history', 'tenant_id');
@@ -80,6 +87,12 @@ const syncFirestoreToDexie = async () => {
          return [];
       }
    };
+
+   const isConnected = await isOnline();
+   if (!isConnected) { 
+      console.log('No internet connection. Syncing to Firestore is skipped.');
+      return;
+   }
 
    await getAllDataAndStore('tenants', dexie.tenants, 'id');
    await getAllDataAndStore('storage', dexie.storage, 'key');
@@ -118,7 +131,6 @@ const handleResetTenantRecord = async ()=>{
    const tenants = await db.tenants.toArray();
    const history = await db.history.toArray();
    const rooms = (await db.storage.get('rooms'))?.value;
-   console.log(rooms)
 
    for (const tenant of tenants) {
       await db.tenants.update(tenant.id, { balance: 0, coin: 0, rent_bills: [], water_bills: [], electric_bills: [] });
@@ -148,6 +160,9 @@ const Settings = ()=>{
 
          const retrievedb = await dexie.settings.get('retrievedb');
          setIsRetrieve(retrievedb?.value ?? false);
+
+         const resetRecord = await dexie.settings.get('resetrecord');
+         setIsResetRecord(resetRecord?.value ?? false);
       })();
    }, []);
 
@@ -169,10 +184,13 @@ const Settings = ()=>{
       setIsResetRecord(checked);
    }, []);
 
-   
-
    return (
       <Box className='flex flex-col gap-2 p-2'>
+         <Paper className='p-2'>
+            <Box className='text-sm text-gray-600'>
+               Note: Any changes made here will take effect after restarting the application.
+            </Box>
+         </Paper>
          <Paper className='p-2'>
          <FormControlLabel 
             control={<Switch checked={isSync} onChange={handleSyncData} />} 

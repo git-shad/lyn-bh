@@ -48,6 +48,7 @@ import { useEffect, useState, useCallback } from 'react'
 import db from './backend/db'
 import {ThreeDot} from 'react-loading-indicators'
 import { syncAllTables, syncFirestoreToDexie, handleResetTenantRecord} from './pages/Settings'
+import { isOnline } from './backend/Online'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -67,8 +68,8 @@ const App: React.FC = () => {
       ]);
 
       if (isSync?.value) await syncAllTables();
-      if (isRetrieve?.value) await syncFirestoreToDexie();
-      if (isResetrecord?.value) await handleResetTenantRecord();
+      if (isRetrieve?.value) await syncFirestoreToDexie().then(()=>db.settings.update('retrievedb',{value: false}))
+      if (isResetrecord?.value) await handleResetTenantRecord().then(()=>db.settings.update('resetrecord',{value: false}))
       setIsBusy(false);
     };
 

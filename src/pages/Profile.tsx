@@ -52,8 +52,6 @@ const Profile: React.FC = () => {
         return { amount: bill.amount, date: date.toLocaleDateString() }
       });
 
-      console.log(finalFilteringRentBills,filteredRentBills,filteredRentHistory, rentHistory, filterOnlyOneDate)
-
       if (finalFilteringRentBills.length === 0 ) return;
       const updatedRentBills = [...(tenant.rent_bills || []), ...finalFilteringRentBills];
       const uniqueRentBills = Array.from(new Set(updatedRentBills.map(bill => JSON.stringify(bill)))).map(bill => JSON.parse(bill));
