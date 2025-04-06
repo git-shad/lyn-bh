@@ -47,8 +47,7 @@ import Settings from './pages/Settings'
 import { useEffect, useState, useCallback } from 'react'
 import db from './backend/db'
 import {ThreeDot} from 'react-loading-indicators'
-import { syncAllTables, syncFirestoreToDexie, handleResetTenantRecord} from './pages/Settings'
-import { isOnline } from './backend/Online'
+import { syncAllTables, syncFirestoreToDexie, handleResetTenantRecord, handleDeleteDB} from './pages/Settings'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -58,18 +57,33 @@ import SettingsIcon from '@mui/icons-material/Settings';
 
 const App: React.FC = () => {
   const [isBusy, setIsBusy] = useState(true);
+  const [loading, setLoading] = useState('loading...');
 
   useEffect(() => {
     const fetchData = async () => {
-      const [isSync, isRetrieve, isResetrecord] = await Promise.all([
+      const [isSync, isRetrieve, isResetrecord, isDeleteDB] = await Promise.all([
         db.settings.get('syncdb'),
         db.settings.get('retrievedb'),
-        db.settings.get('resetrecord')
+        db.settings.get('resetrecord'),
+        db.settings.get('deletedb')
       ]);
 
-      if (isSync?.value) await syncAllTables();
-      if (isRetrieve?.value) await syncFirestoreToDexie().then(()=>db.settings.update('retrievedb',{value: false}))
-      if (isResetrecord?.value) await handleResetTenantRecord().then(()=>db.settings.update('resetrecord',{value: false}))
+      if (isSync?.value){
+        setLoading('Uploading data to server...')
+        await syncAllTables()
+      }
+      if (isRetrieve?.value){
+        setLoading('Retrieving data from server...')
+        await syncFirestoreToDexie().then(()=>db.settings.update('retrievedb',{value: false}))
+      }
+      if (isResetrecord?.value){
+        setLoading('Resetting tenant record...')
+        await handleResetTenantRecord().then(()=>db.settings.update('resetrecord',{value: false}))
+      }
+      if(isDeleteDB?.value){
+        setLoading('Deleting database...')
+        await handleDeleteDB().then(()=>db.settings.update('deletedb',{value: false}))
+      }
       setIsBusy(false);
     };
 
@@ -79,7 +93,7 @@ const App: React.FC = () => {
   if (isBusy) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <ThreeDot variant="bounce" color="#3183cc" size="large" text="loading..." textColor="" />
+      <ThreeDot variant="bounce" color="#3183cc" size="large" text={loading} textColor="" />
       </div>
     )
   }

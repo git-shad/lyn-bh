@@ -76,12 +76,13 @@ db.version(27).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills',
     history: 'tenant_id,*TenantBills',
     storage: 'key,value',
-    hebills: '++id, &date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal',
+    hebills: '++id, date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal',
     settings: 'key,value'
 })
 
 // First run when database is created
 db.on('populate', async ()=>{
+    await db.settings.add({key: 'deletedb', value: false})
     await db.settings.add({key: 'syncdb', value: false})
     await db.settings.add({key: 'retrievedb', value: false})
     await db.settings.add({key: 'resetrecord', value: false})

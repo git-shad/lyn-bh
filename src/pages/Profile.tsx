@@ -344,7 +344,7 @@ const Profile: React.FC = () => {
                   <Box style={{ backgroundColor: '#131c2b' }} key={index} onClick={()=>{ handleOpenDelete('water',index) }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
                   { openDeleteItemW === index && (
                     <Box className='row-span-1 flex justify-end'>
-                      <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'w ater', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
+                      <IconButton onClick={() => { handleDeleteItem({ amount: data?.amount, date: data?.date }, 'water', index) }} color='error' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DeleteIcon /></IconButton>
                     </Box>
                   )}
                   <Box className='row-span-1'>Amount: <span className='font-semibold'>{(data?.amount).toString()}</span></Box>

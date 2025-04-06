@@ -48,9 +48,18 @@ const BillingAndPayments: React.FC = () => {
   }, []);
 
   // run when changing the room
+  const [optProfileInRoomSelected,setOptProfileInRoomSelected] = useState<{label: string, id: number}[]>([])// this include in electric
   const handleInputRoom = useCallback(async (e: SelectChangeEvent) => {
     const room: string = e.target.value as string;
-    const tenant = tenants?.filter(tenant => tenant.room?.includes(room));
+    const tenant = tenants?.filter(tenant => tenant.room === room);
+    
+    if (tenant) {
+      const profiles = tenant
+        .filter(t => t.name !== undefined && t.id !== undefined)
+        .map(t => ({ label: t.name as string, id: t.id as number }));
+      setOptProfileInRoomSelected(profiles);
+    }
+
     setTenantSelected(tenant);
     setRoomSelected(room);
     setCount(personCount[room]);
@@ -59,6 +68,7 @@ const BillingAndPayments: React.FC = () => {
     setUsage(0);
     setTotal(0);
     setTotalFinal(0);
+    await checkRoomAndDateInHeBills(room)
   }, [personCount]);
 
   // setup and initialize
@@ -142,7 +152,7 @@ const BillingAndPayments: React.FC = () => {
 
   }, [rentAmount, optProfileSelected, tenants]);
 
-  const handleSelectedValue = useCallback((_: any, value: { label: string, id: number }[]) => setOptProfileSelected(value), [])
+  const handleRentTenantsSelectedValue = useCallback((_: any, value: { label: string, id: number }[]) => setOptProfileSelected(value), [])
 
   const handleIsHideRent = useCallback(()=>{
     setIsRentShow( hide => {
@@ -171,13 +181,13 @@ const BillingAndPayments: React.FC = () => {
   }, []);
 
   const handleWaterAmount = useCallback(() => {
+    if(waterAmount <= 0) return
     setISWaterBillApprove(true);
     setIsWaterBillShow(true);
     if (isWaterBillApprove === false) return;
 
     const divide: number = tenants ? (waterAmount / tenants.length) : 0;
     const roundOf: number = Math.round(divide);
-    const dateNow: string = new Date().toLocaleDateString(); 
 
     const date = new Date(dateNowR);
     tenants?.forEach(async (tenant) => {
@@ -238,8 +248,14 @@ const BillingAndPayments: React.FC = () => {
   const [tdata, setTData] = useState<TableData[]>([]);
   const [open, setOpen] = useState(false);
 
+  
+  const handleElectricTenantsSelectedValue = useCallback((_: any, value: { label: string, id: number }[]) => {
+    setOptProfileInRoomSelected(value);
+    const selectedTenant = tenants?.filter(tenant => value.some(profile => profile.id === tenant.id));
+    setTenantSelected(selectedTenant);
+  }, []);
+
   const handleElecticAmount = useCallback(async () => {
-    let line = 0
     if (past > 0 && present > 0 && isElectricBillApprove) {
       await db.storage.update(room, { value: Number(present) });
       await db.storage.update('rate', { value: rate });
@@ -260,7 +276,6 @@ const BillingAndPayments: React.FC = () => {
         individual: (total / count),
         roundOffFinal: totalFinal
       };
-
 
       const existingBill = await db.hebills.where('room').equals(tableRow.room).and((bill) => (new Date(bill.date)).getMonth() === (new Date(tableRow.date)).getMonth() && (new Date(bill.date)).getFullYear() === (new Date(tableRow.date)).getFullYear()).first();
       const [e_month,,e_year] = existingBill?.date?.split('/') || [];
@@ -290,13 +305,13 @@ const BillingAndPayments: React.FC = () => {
         })
         const electricBills = electricb? [...electricb, newEBills ] : [newEBills];
 
-        
         newBalance -= oldBalance
         newBalance += newEBills.amount
 
         await db.tenants.update(tenant.id, { electric_bills: electricBills, balance: newBalance });
       });
 
+      console.log(tenantSelected)
       setTData((prevData) => {
         const updatedData = prevData.filter(data => data.room !== room);
         return [...updatedData, tableRow];
@@ -315,8 +330,30 @@ const BillingAndPayments: React.FC = () => {
     }
   }, [past, present, tax, rate, isElectricBillApprove, room, tenantSelected, totalFinal, count, usage, total, dateNowE]);
 
+  const [isRecordExistsElectricMsgShow, setIsRecordExistsElectricMsgShow] = useState<boolean>(false);
+  const checkRoomAndDateInHeBills = useCallback(async (room:string) => {
+    if (!room || !dateNowE) return false;
+
+    const targetDate = new Date(dateNowE);
+    const existingBill = await db.hebills
+      .where('room')
+      .equals(room)
+      .and((bill) => {
+        const billDate = new Date(bill.date);
+        return (
+          billDate.getMonth() === targetDate.getMonth() &&
+          billDate.getFullYear() === targetDate.getFullYear()
+        );
+      })
+      .first();
+
+      setIsRecordExistsElectricMsgShow(!!existingBill);
+  }, [room, dateNowE]);
+
+  const [hasSelected,setHasSelected] = useState<boolean>(false)
   useEffect(()=>{
-    if(rooms.length > 0){
+    if(rooms.length > 0 && !hasSelected){
+      setHasSelected(true)
       const e = { target: { value: rooms[0] } } as SelectChangeEvent;
       handleInputRoom(e);
     }
@@ -374,7 +411,7 @@ const BillingAndPayments: React.FC = () => {
               {isRentMSGShow && (
                 <Alert severity='success'>This change has not affected the past amount of rent. Change approve!</Alert>
               )}
-              <Autocomplete value={optProfileSelected} onChange={handleSelectedValue} multiple size='small' options={optProfile} renderInput={(params) => <TextField {...params} label="Profile" />}/>
+              <Autocomplete value={optProfileSelected} onChange={handleRentTenantsSelectedValue} multiple size='medium' options={optProfile} renderInput={(params) => <TextField {...params} label="Profile" />}/>
               <IonInput onFocus={handleFocus} value={rentAmount} onIonInput={handleRentInput} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Amount" />
               <Button onClick={handleRentAmount} startIcon={<DoneAllRoundedIcon />} variant='contained' fullWidth>distribute</Button>
             </Box>
@@ -427,6 +464,7 @@ const BillingAndPayments: React.FC = () => {
               </Paper>
             </Box>
             <Box className='flex flex-col gap-4'>
+              <Autocomplete value={optProfileInRoomSelected} onChange={handleElectricTenantsSelectedValue} multiple size='medium' options={optProfile} renderInput={(params) => <TextField {...params} label="In Room" />}/>
               <FormControl variant='standard' className='w-full m-1'>
                 <InputLabel>Tenant Room</InputLabel>
                 <Select label="Room Number" value={room} onChange={handleInputRoom}>
@@ -435,15 +473,20 @@ const BillingAndPayments: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
-              <IonInput onFocus={handleFocus} value={past} onIonInput={(e: any) => setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />
-              <IonInput onFocus={handleFocus} value={present} onIonInput={(e: any) => setPresent(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Present" />
+              {isRecordExistsElectricMsgShow && (
+                <Alert severity='info' icon={<HistoryIcon />}>
+                  A record for this month already exists. Please check the history for details, but you can update it by re-entering a new record.
+                </Alert>
+              )}
+              <IonInput onFocus={handleFocus} value={present != 0 ? present : undefined} onIonInput={(e: any) => setPresent(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Present" />
+              <IonInput onFocus={handleFocus} value={past != 0 ? past : undefined} onIonInput={(e: any) => setPast(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Past" />
               <Box className='flex flex-row gap-4'>
                 <IonInput onFocus={handleFocus} value={rate} onIonInput={(e: any) => setRate(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Rate" />
                 <IonInput onFocus={handleFocus} value={tax} onIonInput={(e: any) => setTax(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Tax" />
               </Box>
               <Box className='flex flex-row gap-4'>
                 <IonInput onFocus={handleFocus} value={usage} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Usage" />
-                <IonInput onFocus={handleFocus} value={count} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Of Head" />
+                <IonInput onFocus={handleFocus} value={count} onIonInput={(e: any) => setCount(e.detail.value)} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Of Head" />
               </Box>
               <IonInput onFocus={handleFocus} value={totalFinal} type='number' counter={true} maxlength={6} labelPlacement='stacked' label="Individual (Round Off)" />
               {isElectricMsgShow && (
@@ -456,7 +499,7 @@ const BillingAndPayments: React.FC = () => {
                 <Button onClick={handleElecticAmount} startIcon={isElectricBillApprove ? <DoneAllRoundedIcon /> : <CheckRoundedIcon />} variant='contained' fullWidth>distribute</Button>
               </Box>
             </Box>
-            <MDate open={isOpenECal} onClose={()=> setIsOpenECal(!isOpenECal)} result={handleNewDateE}/>
+            <MDate open={isOpenECal} onClose={()=> setIsOpenECal(!isOpenECal)} result={handleNewDateE} isChange={async ()=> await checkRoomAndDateInHeBills(room)}/>
             <EHistory open={openEHistory} onClose={handleOpenEhistory}/>
           </Paper>
         )}

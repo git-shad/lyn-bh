@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Box,FormControlLabel,Switch, Paper, Button } from '@mui/material'
+import { Box,FormControlLabel,Switch, Paper, Alert} from '@mui/material'
 import { db as dexie } from '../backend/db'
 import { Dexie } from 'dexie'
 import { initializeApp } from "firebase/app";
@@ -66,14 +66,14 @@ const syncAllTables = async () => {
    await syncTable(dexie.tenants, 'tenants', 'id');
    await syncTable(dexie.storage, 'storage', 'key');
    await syncTable(dexie.history, 'history', 'tenant_id');
-   await syncTable(dexie.hebills, 'hebills', 'date');   
+   await syncTable(dexie.hebills, 'hebills', 'id');   
    console.log('All tables synced to Firestore');
 };
 
 const syncFirestoreToDexie = async () => {
    const getAllDataAndStore = async <T extends { [x: string]: any }>( collectionName: string, table: Dexie.Table<T, any>, keyField: string ) => {
       try {
-         const querySnapshot = await getDocs(collection(firestore, collectionName));
+         const querySnapshot = await getDocs(collection(firestore, collectionName))
          const data = querySnapshot.docs.map(doc => ({
             [keyField]: doc.id, 
             ...doc.data()
@@ -97,7 +97,7 @@ const syncFirestoreToDexie = async () => {
    await getAllDataAndStore('tenants', dexie.tenants, 'id');
    await getAllDataAndStore('storage', dexie.storage, 'key');
    await getAllDataAndStore('history', dexie.history, 'tenant_id');
-   await getAllDataAndStore('hebills', dexie.hebills, 'date');
+   await getAllDataAndStore('hebills', dexie.hebills, 'id');
    console.log('All data from Firestore synced to Dexie');
 };
 
@@ -148,10 +148,26 @@ const handleResetTenantRecord = async ()=>{
    console.log('Tenant records reset');
 }
 
+const handleDeleteDB = async () => {
+   const deleteDb = async () => {
+      const db = dexie;
+      await db.transaction('rw', db.tenants, db.history, db.storage, db.hebills, async () => {
+         await db.tenants.clear();
+         await db.history.clear();
+         await db.storage.clear();
+         await db.hebills.clear();
+      });
+      console.log('Database cleared');
+      console.log('Database cleared and no re-sync performed to avoid restoring deleted data');
+   };
+   await deleteDb();
+}
+
 const Settings = ()=>{
    const [isSync, setIsSync] = useState<boolean>(false);
    const [isRetrieve, setIsRetrieve] = useState<boolean>(false);
    const [isResetRecord, setIsResetRecord] = useState<boolean>(false)
+   const [isResetDB, setIsResetDB] = useState(false)
     
    useEffect(() => {
       (async () => {
@@ -184,6 +200,12 @@ const Settings = ()=>{
       setIsResetRecord(checked);
    }, []);
 
+   const handleResetDBRecord = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { checked } = event.target;
+      await dexie.settings.update('deletedb', { value: checked });
+      setIsResetDB(checked);
+   }, []);
+
    return (
       <Box className='flex flex-col gap-2 p-2'>
          <Paper className='p-2'>
@@ -211,11 +233,23 @@ const Settings = ()=>{
                label='Reset Tenant Record' 
                labelPlacement='end'
             />
-            {/* <Button onClick={handleResetTenantRecord} size='large' fullWidth sx={{justifyContent: 'left', textTransform: 'none'}} startIcon={<RestartAltIcon/>}>Reset Tenant Record</Button> */}
+            { isResetRecord && (
+               <Alert severity="warning">WARNING: Permanent reset tenant's data record</Alert>
+            )}
+         </Paper>
+         <Paper className='p-2'>
+            <FormControlLabel 
+               control={<Switch checked={isResetDB} onChange={handleResetDBRecord} />} 
+               label='Delete Intire data' 
+               labelPlacement='end'
+            />
+            { isResetDB && (
+               <Alert severity="error">HAZARD: Permanent delete tenant's data loss imminent</Alert>
+            )}
          </Paper>
       </Box>
    )
 }
 
-export { syncAllTables, syncFirestoreToDexie, deleteTenantAndHistory, handleResetTenantRecord}
+export { syncAllTables, syncFirestoreToDexie, deleteTenantAndHistory, handleResetTenantRecord, handleDeleteDB}
 export default Settings
