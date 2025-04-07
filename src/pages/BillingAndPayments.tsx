@@ -253,7 +253,7 @@ const BillingAndPayments: React.FC = () => {
     setOptProfileInRoomSelected(value);
     const selectedTenant = tenants?.filter(tenant => value.some(profile => profile.id === tenant.id));
     setTenantSelected(selectedTenant);
-  }, []);
+  }, [tenants]);
 
   const handleElecticAmount = useCallback(async () => {
     if (past > 0 && present > 0 && isElectricBillApprove) {
