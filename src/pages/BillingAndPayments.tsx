@@ -106,13 +106,13 @@ const BillingAndPayments: React.FC = () => {
     })();
   }, [tenants]);
 
-  function formatDate(date: string) {
+  function formatDate(date: string, MYD: boolean = false) {
     const dateParts = date.split('/');
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const month = monthNames[parseInt(dateParts[0], 10) - 1];
     const day = parseInt(dateParts[1], 10);
     const year = parseInt(dateParts[2], 10);
-    return `${month} ${day}, ${year}`;
+    return MYD ? `${month}, ${year}` : `${month} ${day}, ${year}`;
   }
 
   //start: rent
@@ -182,6 +182,7 @@ const BillingAndPayments: React.FC = () => {
 
   const handleWaterAmount = useCallback(() => {
     if(waterAmount <= 0) return
+
     setISWaterBillApprove(true);
     setIsWaterBillShow(true);
     if (isWaterBillApprove === false) return;
@@ -189,7 +190,7 @@ const BillingAndPayments: React.FC = () => {
     const divide: number = tenants ? (waterAmount / tenants.length) : 0;
     const roundOf: number = Math.round(divide);
 
-    const date = new Date(dateNowR);
+    const date = new Date(dateNowW);
     tenants?.forEach(async (tenant) => {
       let oldBalance = 0
       let newEBills = { amount: roundOf, date: dateNowE }
@@ -224,6 +225,23 @@ const BillingAndPayments: React.FC = () => {
       setIsWaterMsgShow(false);
     }, 5000);
   }, [isWaterBillApprove, waterAmount, tenants]);
+  
+  const [isResetAmountInDate, setIsResetAmountInDate] = useState<boolean>(false);
+  const handleResetAmountInDate = useCallback(async () => {
+    const date = new Date(dateNowW);
+    tenants?.forEach(async (tenant) => {
+      const waterBills = tenant?.water_bills?.filter(item => {
+        const [month, , year] = item.date.split('/');
+        return !(parseInt(month) === (date.getMonth() + 1) && parseInt(year) === date.getFullYear());
+      });
+      await db.tenants.update(tenant.id, { water_bills: waterBills });
+    });
+    setIsResetAmountInDate(true);
+
+    setTimeout(() => {
+      setIsResetAmountInDate(false);
+    }, 5000);
+  }, [dateNowW, tenants]);
 
   const handleIsHideWater = useCallback(()=>{
     setIsWaterShow( hide => {
@@ -250,7 +268,7 @@ const BillingAndPayments: React.FC = () => {
 
   
   const handleElectricTenantsSelectedValue = useCallback((_: any, value: { label: string, id: number }[]) => {
-    setOptProfileInRoomSelected(value);
+    setOptProfileInRoomSelected(value); 
     const selectedTenant = tenants?.filter(tenant => value.some(profile => profile.id === tenant.id));
     setTenantSelected(selectedTenant);
   }, [tenants]);
@@ -431,6 +449,14 @@ const BillingAndPayments: React.FC = () => {
                 <Button startIcon={<CalendarMonthIcon />} onClick={()=> setIsOpenWCal(!isOpenWCal)} color='inherit' fullWidth><Box className='text-xl font-semibold'>{formatDate(dateNowW)}</Box></Button>
               </Paper>
             </Box>
+            <Box className='flex flex-col gap-2'>
+              {isResetAmountInDate && (
+              <Alert severity='info'>The amount for {formatDate(dateNowW,true)} has been reset.</Alert>
+              )}
+              <Box className='flex flex-row justify-end gap-2'>
+                <Button onClick={handleResetAmountInDate} variant="outlined" color="secondary">Reset</Button>
+              </Box>
+            </Box> 
             <Box className='flex flex-col gap-2'>
               {isWatterMsgShow && (
                 <Alert severity='success'>Divides the amount of the water bill for all tenants.</Alert>

@@ -4,7 +4,7 @@ import {
   IonContent, IonItem, IonGrid, IonRow, IonCol, IonIcon,
   IonAccordionGroup, IonAccordion, IonLabel, IonList, useIonRouter, IonInput
 } from '@ionic/react';
-import { Button, IconButton, SvgIcon, Box } from '@mui/material';
+import { Button, IconButton, SvgIcon, Box, FormControlLabel, Paper, Switch } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import { db, Tenant, RentBill, ElectricBill, WaterBill, TenantHistory } from '../backend/db';
 import { format, eachDayOfInterval } from 'date-fns';
@@ -12,14 +12,13 @@ import EditTenant from '../components/EditTenant';
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { accessibilityOutline, filter, filterCircle, flash, home, water } from 'ionicons/icons';
+import { flash, home, water } from 'ionicons/icons';
 import PaidIcon from '@mui/icons-material/Paid';
 import { PiHandCoinsFill } from "react-icons/pi";
 import HistoryIcon from '@mui/icons-material/History';
 import DoneIcon from '@mui/icons-material/Done';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteIcon from '@mui/icons-material/Delete'; 
 
 const Profile: React.FC = () => {
   const location = useLocation();
@@ -91,7 +90,8 @@ const Profile: React.FC = () => {
     }
 
     (async () => {
-      const tenant = await db.tenants.get(id);
+      const cutoff = await db.cutoff.get(id)
+      const tenant = cutoff ? await db.quarantine.get(id) : await db.tenants.get(id); 
       if (!tenant) {
         GoTo('/tenants');
         return;
@@ -249,6 +249,36 @@ const Profile: React.FC = () => {
     } 
   },[id, tenant, dRent, dWater, dElectric])
 
+  const [isCutOff, setIsCutOff] = useState(false);
+  const handleCutOffSwitch = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { checked } = event.target;
+
+        if (checked) {
+          await db.cutoff.add({ id, name: tenant?.name, room: tenant?.room, date: new Date().toLocaleDateString() });
+          await db.quarantine.add( tenant as any);
+          await db.tenants.update(id, { room: 'CUTOFF' });
+        } else {
+          const tenantData = await db.quarantine.get(id);
+          if (tenantData) {
+            await db.tenants.update(id, tenantData as Tenant);
+            await db.cutoff.delete(id);
+            await db.quarantine.delete(id);
+          }
+        }
+
+        setIsCutOff(checked);
+  },[tenant])
+
+  useEffect(() => {
+    const fetchCutOff = async () => {
+      const cutoff = await db.cutoff.get(id);
+      if (cutoff) {
+        setIsCutOff(true);
+      }
+    };
+    fetchCutOff();
+  }, [id]);
+
   return (
     <IonContent>
       <IonItem lines='none' className='sticky top-0 bg-transparent z-20'>
@@ -263,7 +293,7 @@ const Profile: React.FC = () => {
             <IonRow className='m-2 mb-10 w-full flex justify-center'>
               <Box className='flex-col text-center'>
                 <Box className='font-bold text-3xl'>{tenant?.name}</Box>
-                <Box className='font-semibold text-sm itali'>{tenant?.room}</Box>
+                <Box className='font-semibold text-sm itali'>{ isCutOff ? 'CUTOFF' : tenant?.room}</Box>
               </Box>
             </IonRow>
 
@@ -284,6 +314,13 @@ const Profile: React.FC = () => {
           </IonGrid>
         </Box>
       </Box>
+      <IonItem className='p-2'>
+        <FormControlLabel 
+          control={<Switch checked={isCutOff} onChange={handleCutOffSwitch} />} 
+          label={<span style={{ color: '#131c2b' }}>{isCutOff ? 'Cutoff Enabled' : 'Cutoff Disabled'}</span>} 
+           labelPlacement='end'
+        /> 
+      </IonItem>
       <IonItem lines='none' className='mt-3' hidden={isHidden}>
         <IonGrid>
           <IonRow>

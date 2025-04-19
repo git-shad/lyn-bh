@@ -64,20 +64,43 @@ interface Settings{
     value: any
 }
 
+interface CutOffTenant{
+    id?: number
+    name?: string
+    room?: string
+    date?: string
+}
+
+interface QuarantineTenant{// tenant cutoff are stored in this table
+    id?: number
+    name?: string
+    room?: string
+    date?: string
+    coin?: number
+    balance?: number
+    electric_bills?: ElectricBill[]
+    water_bills?: WaterBill[]
+    rent_bills?: RentBill[]
+}
+
 const db = new Dexie('tenantDB') as Dexie & {
     tenants: EntityTable<Tenant,'id'>
     history: EntityTable<TenantHistory,'tenant_id'>
     storage: EntityTable<Storage,'key'>
     hebills: EntityTable<TableElectricBillHistory,'id'>
     settings: EntityTable<Settings,'key'>
+    cutoff: EntityTable<CutOffTenant,'id'>
+    quarantine: EntityTable<QuarantineTenant,'id'>
 }
 
-db.version(27).stores({
+db.version(29).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills',
     history: 'tenant_id,*TenantBills',
     storage: 'key,value',
     hebills: '++id, date, room, past, present, usage, rate, tax, total, roundOff, ofHead, individual, roundOffFinal',
-    settings: 'key,value'
+    settings: 'key,value',
+    cutoff: '++id,name,room,date',
+    quarantine: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills'
 })
 
 // First run when database is created

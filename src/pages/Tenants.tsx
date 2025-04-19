@@ -12,7 +12,11 @@ import AddIcon from '@mui/icons-material/Add';
 
 const Tenants: React.FC = () => {
   
-  const tenants = useLiveQuery(() => db.tenants.toArray());
+  const tenants = useLiveQuery(() => 
+    db.tenants.toArray().then(tenants => 
+      tenants.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+    )
+  );
   const [data, setData] = useState<Tenants>();
 
   useEffect(() => {
@@ -69,7 +73,7 @@ const Tenants: React.FC = () => {
         <IonList className=''>
           {data?.map((tenant) => (
             <IonItem key={tenant.id}>
-              <Button component={Link} to={`/tenants/profile?id=${tenant.id}`} fullWidth variant='text' sx={{justifyContent: 'left', textTransform: 'none'}}>{tenant.name}</Button>
+              <Button color={tenant.room === 'CUTOFF'? 'error' : 'primary'} component={Link} to={`/tenants/profile?id=${tenant.id}`} fullWidth variant='text' sx={{justifyContent: 'left', textTransform: 'none'}}>{tenant.name}</Button>
             </IonItem>
           ))}
         </IonList>

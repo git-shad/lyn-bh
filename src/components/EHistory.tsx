@@ -116,16 +116,20 @@ const EHistory:React.FC<Props> = ({open,onClose})=>{
       try {
          await Promise.all(filteredRecords.map(async record => {
             await db.hebills.delete(record.id);
-            const tenant = await db.tenants.where('room').equals(record.room).first();
-            if (tenant) {
-               const [month, , year] = record.date.split('/');
-               const tenantElectricBillDates = tenant.electric_bills || [];
-               const updatedElectricBillDates = tenantElectricBillDates.filter(date => {
-                  const [tMonth, , tYear] = date.date.split('/');
-                  return tMonth !== month || tYear !== year;
-               });
+            const tenants = await db.tenants.where('room').equals(record.room).toArray();
+            console.log('Tenants:', tenants);
 
-               await db.tenants.update(tenant.id, { electric_bills: updatedElectricBillDates });
+            for (const tenant of tenants) {
+               if (tenant && tenant.electric_bills) {
+                 const [month, , year] = record.date.split('/');
+                 const updatedElectricBillDates = tenant.electric_bills.filter(date => {
+                   const [tMonth, , tYear] = date.date.split('/');
+                   return tMonth !== month || tYear !== year;
+                 });
+
+                 await db.tenants.update(tenant.id, { electric_bills: updatedElectricBillDates });
+                 console.log(`Updated tenant with id ${tenant.id}`);
+               }
             }
             console.log(`Deleted record with id ${record.id}`);
          }));
