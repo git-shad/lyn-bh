@@ -321,7 +321,7 @@ const Profile: React.FC = () => {
            labelPlacement='end'
         /> 
       </IonItem>
-      <IonItem lines='none' className='mt-3' hidden={isHidden}>
+      <IonItem lines='none' className='mt-1' hidden={isHidden}>
         <IonGrid>
           <IonRow>
             {isAddCoin && (
@@ -332,8 +332,10 @@ const Profile: React.FC = () => {
           </IonRow>
           <IonRow>
             <IonCol className='flex justify-end mt-2'>
-              <Box className='flex flex-row gap-2'>
-                <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
+              <Box className='flex flex-row'>
+                {!isAddCoin && (
+                  <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
+                )}
                 <IconButton onClick={() => setIsAddCoin(!isAddCoin)} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><PiHandCoinsFill /></SvgIcon></IconButton>
                 {isAddCoin && (
                   <IconButton onClick={handleAddCoin} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DoneIcon /></IconButton>
