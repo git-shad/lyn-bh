@@ -74,6 +74,9 @@
     ],
     "onlyBuiltDependencies": [
       "sharp"
-    ]
+    ],
+    "overrides": {
+      "@firebasegen/default-connector": "link:dataconnect-generated/js/default-connector"
+    }
   }
 }

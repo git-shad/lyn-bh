@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@firebasegen/default-connector': link:dataconnect-generated/js/default-connector
+
 importers:
 
   .:
@@ -39,8 +42,8 @@ importers:
         specifier: ^11.14.0
         version: 11.14.0(@emotion/react@11.14.0(@types/react@18.3.18)(react@18.3.1))(@types/react@18.3.18)(react@18.3.1)
       '@firebasegen/default-connector':
-        specifier: file:dataconnect-generated/js/default-connector
-        version: file:dataconnect-generated/js/default-connector(@tanstack-query-firebase/react@1.0.7(@tanstack/react-query@5.67.2(react@18.3.1))(firebase@11.4.0))(@tanstack/react-query@5.67.2(react@18.3.1))(firebase@11.4.0)
+        specifier: link:dataconnect-generated/js/default-connector
+        version: link:dataconnect-generated/js/default-connector
       '@ionic/core':
         specifier: ^8.4.3
         version: 8.4.3
@@ -1173,14 +1176,6 @@ packages:
   '@firebase/webchannel-wrapper@1.0.3':
     resolution: {integrity: sha512-2xCRM9q9FlzGZCdgDMJwc0gyUkWFtkosy7Xxr6sFgQwn+wMNIWd7xIvYNauU1r64B5L5rsGKy/n9TKJ0aAFeqQ==}
 
-  '@firebasegen/default-connector@file:dataconnect-generated/js/default-connector':
-    resolution: {directory: dataconnect-generated/js/default-connector, type: directory}
-    engines: {node: ' >=18.0'}
-    peerDependencies:
-      '@tanstack-query-firebase/react': ^1.0.5
-      '@tanstack/react-query': ^5
-      firebase: ^11.3.0
-
   '@grpc/grpc-js@1.9.15':
     resolution: {integrity: sha512-nqE7Hc0AzI+euzUwDAy0aY5hCp10r734gMGRdU+qOPX0XSceI2ULrcXB5U2xSc5VkWwalCj4M7GzCAygZl2KoQ==}
     engines: {node: ^8.13.0 || >=10.10.0}
@@ -1569,20 +1564,6 @@ packages:
     resolution: {integrity: sha512-+0Inu+dJ9/LgWSskcZwx7v17v4GILcwIYxNgD+OuK0U+D5z61WsxWw7yHkYG5OqGPBijsJMVssYRx/Tn+e7F9A==}
     engines: {node: '>=16.0.0', npm: '>=7.10.0'}
     hasBin: true
-
-  '@tanstack-query-firebase/react@1.0.7':
-    resolution: {integrity: sha512-pfHZnyksCeKQVoqQbCBeIETNFjIcYzeOMmM64HncOHtixLUJNRtA7nr7crybq0HTy5/ziVSYxzWHzlKpU5qU+A==}
-    peerDependencies:
-      '@tanstack/react-query': ^5
-      firebase: ^11.3.0
-
-  '@tanstack/query-core@5.67.2':
-    resolution: {integrity: sha512-+iaFJ/pt8TaApCk6LuZ0WHS/ECVfTzrxDOEL9HH9Dayyb5OVuomLzDXeSaI2GlGT/8HN7bDGiRXDts3LV+u6ww==}
-
-  '@tanstack/react-query@5.67.2':
-    resolution: {integrity: sha512-6Sa+BVNJWhAV4QHvIqM73norNeGRWGC3ftN0Ix87cmMvI215I1wyJ44KUTt/9a0V9YimfGcg25AITaYVel71Og==}
-    peerDependencies:
-      react: ^18 || ^19
 
   '@testing-library/dom@10.4.0':
     resolution: {integrity: sha512-pemlzrSESWbdAloYml3bAJMEfNh1Z7EduzqPKprCH5S341frlpYnUEW0H72dLxa6IsYr+mPno20GiSm+h9dEdQ==}
@@ -6390,12 +6371,6 @@ snapshots:
 
   '@firebase/webchannel-wrapper@1.0.3': {}
 
-  '@firebasegen/default-connector@file:dataconnect-generated/js/default-connector(@tanstack-query-firebase/react@1.0.7(@tanstack/react-query@5.67.2(react@18.3.1))(firebase@11.4.0))(@tanstack/react-query@5.67.2(react@18.3.1))(firebase@11.4.0)':
-    dependencies:
-      '@tanstack-query-firebase/react': 1.0.7(@tanstack/react-query@5.67.2(react@18.3.1))(firebase@11.4.0)
-      '@tanstack/react-query': 5.67.2(react@18.3.1)
-      firebase: 11.4.0
-
   '@grpc/grpc-js@1.9.15':
     dependencies:
       '@grpc/proto-loader': 0.7.13
@@ -6812,18 +6787,6 @@ snapshots:
   '@stencil/core@4.20.0': {}
 
   '@stencil/core@4.26.0': {}
-
-  '@tanstack-query-firebase/react@1.0.7(@tanstack/react-query@5.67.2(react@18.3.1))(firebase@11.4.0)':
-    dependencies:
-      '@tanstack/react-query': 5.67.2(react@18.3.1)
-      firebase: 11.4.0
-
-  '@tanstack/query-core@5.67.2': {}
-
-  '@tanstack/react-query@5.67.2(react@18.3.1)':
-    dependencies:
-      '@tanstack/query-core': 5.67.2
-      react: 18.3.1
 
   '@testing-library/dom@10.4.0':
     dependencies:
