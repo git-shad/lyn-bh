@@ -37,7 +37,7 @@ setupIonicReact();
 
 import {
   IonToolbar,IonMenu,IonHeader,IonContent,IonPage,IonMenuButton,IonTitle,
-  IonList,IonItem,IonMenuToggle,
+  IonList,IonItem,
 } from '@ionic/react'
 import {Button,SvgIcon} from '@mui/material'
 import Tenants from './pages/Tenants';

@@ -18,7 +18,7 @@ import { PiHandCoinsFill } from "react-icons/pi";
 import HistoryIcon from '@mui/icons-material/History';
 import DoneIcon from '@mui/icons-material/Done';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
-import DeleteIcon from '@mui/icons-material/Delete'; 
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const Profile: React.FC = () => {
   const location = useLocation();
