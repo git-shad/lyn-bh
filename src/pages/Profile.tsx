@@ -349,7 +349,6 @@ const Profile: React.FC = () => {
         <Box className='flex flex-col w-full'>
           <Box className='font-semibold text-lg' style={{ color: '#131c2b' }}>Utility Bills</Box>
           <IonAccordionGroup expand='inset'>
-
             <IonAccordion value='rent'>
               <IonItem slot='header' color='light'>
                 <IonIcon icon={home} className='mr-4' />
@@ -427,7 +426,7 @@ const Profile: React.FC = () => {
       </IonItem>
       
       {isHidden && (
-        <IonList lines='none' className='m-4 flex flex-col' >
+        <IonList lines='none' className='mx-4 flex flex-col' >
           <Box className='font-bold text-2xl my-2' style={{ color: '#131c2b' }}>History List</Box>
           {history?.bills && history.bills.map((bill, index) => bill.amount !== 0 && bill.start_date !== '' ? (
             <Box key={index} className='flex flex-col border rounded-md p-2 m-2' style={{ backgroundColor: '#131c2b' }}>
