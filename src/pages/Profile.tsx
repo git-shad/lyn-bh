@@ -287,7 +287,7 @@ const Profile: React.FC = () => {
         </Link>
         <Button startIcon={<HistoryIcon />} onClick={() => setIsHidden(!isHidden)} slot='end' variant='contained' size='small'>History</Button>
       </IonItem>
-      <Box className='m-4'>
+      <Box className='m-4' hidden={isHidden}>
         <Box className='w-full' >
           <IonGrid className='border border-blue-500 rounded-xl px-4 py-9' style={{ backgroundColor: '#131c2b' }}>
             <IonRow className='m-2 mb-10 w-full flex justify-center'>
@@ -314,7 +314,7 @@ const Profile: React.FC = () => {
           </IonGrid>
         </Box>
       </Box>
-      <IonItem className='p-2'>
+      <IonItem className='p-2' hidden={isHidden}>
         <FormControlLabel 
           control={<Switch checked={isCutOff} onChange={handleCutOffSwitch} />} 
           label={<span style={{ color: '#131c2b' }}>{isCutOff ? 'Cutoff Enabled' : 'Cutoff Disabled'}</span>} 
@@ -349,6 +349,7 @@ const Profile: React.FC = () => {
         <Box className='flex flex-col w-full'>
           <Box className='font-semibold text-lg' style={{ color: '#131c2b' }}>Utility Bills</Box>
           <IonAccordionGroup expand='inset'>
+
             <IonAccordion value='rent'>
               <IonItem slot='header' color='light'>
                 <IonIcon icon={home} className='mr-4' />
@@ -424,6 +425,7 @@ const Profile: React.FC = () => {
           </IonAccordionGroup>
         </Box>
       </IonItem>
+      
       {isHidden && (
         <IonList lines='none' className='m-4 flex flex-col' >
           <Box className='font-bold text-2xl my-2' style={{ color: '#131c2b' }}>History List</Box>
