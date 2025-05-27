@@ -83,6 +83,19 @@ const Profile: React.FC = () => {
   const [history, setHistory] = useState<TenantHistory>();
 
 
+  const [isCutOff, setIsCutOff] = useState(false)
+  
+  const fetchCutOff = async () => {
+    const cutoff = await db.cutoff.get(id);
+    if (cutoff) {
+      setIsCutOff(true);
+    }else{
+      setIsCutOff(false);
+    }
+  };
+  // Fetch tenant data and bills
+  // and history when the component mounts
+  // and when the id changes
   useEffect(() => {
     if (!id) {
       GoTo('/tenants');
@@ -107,6 +120,7 @@ const Profile: React.FC = () => {
         setHistory(historys);
       }
     })();
+    fetchCutOff();
   }, [id, GoTo,tenant]);
 
   //for paying button
@@ -249,36 +263,7 @@ const Profile: React.FC = () => {
     } 
   },[id, tenant, dRent, dWater, dElectric])
 
-  const [isCutOff, setIsCutOff] = useState(false);
-  const handleCutOffSwitch = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { checked } = event.target;
-
-        if (checked) {
-          await db.cutoff.add({ id, name: tenant?.name, room: tenant?.room, date: new Date().toLocaleDateString() });
-          await db.quarantine.add( tenant as any);
-          await db.tenants.update(id, { room: 'CUTOFF' });
-        } else {
-          const tenantData = await db.quarantine.get(id);
-          if (tenantData) {
-            await db.tenants.update(id, tenantData as Tenant);
-            await db.cutoff.delete(id);
-            await db.quarantine.delete(id);
-          }
-        }
-
-        setIsCutOff(checked);
-  },[tenant])
-
-  useEffect(() => {
-    const fetchCutOff = async () => {
-      const cutoff = await db.cutoff.get(id);
-      if (cutoff) {
-        setIsCutOff(true);
-      }
-    };
-    fetchCutOff();
-  }, [id]);
-
+  
   return (
     <IonContent>
       <IonItem lines='none' className='sticky top-0 bg-transparent z-20'>
@@ -314,13 +299,6 @@ const Profile: React.FC = () => {
           </IonGrid>
         </Box>
       </Box>
-      <IonItem className='p-2' hidden={isHidden}>
-        <FormControlLabel 
-          control={<Switch checked={isCutOff} onChange={handleCutOffSwitch} />} 
-          label={<span style={{ color: '#131c2b' }}>{isCutOff ? 'Cutoff Enabled' : 'Cutoff Disabled'}</span>} 
-           labelPlacement='end'
-        /> 
-      </IonItem>
       <IonItem lines='none' className='mt-1' hidden={isHidden}>
         <IonGrid>
           <IonRow>

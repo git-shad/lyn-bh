@@ -83,6 +83,7 @@ interface QuarantineTenant{// tenant cutoff are stored in this table
     rent_bills?: RentBill[]
 }
 
+//register table types for Dexie
 const db = new Dexie('tenantDB') as Dexie & {
     tenants: EntityTable<Tenant,'id'>
     history: EntityTable<TenantHistory,'tenant_id'>

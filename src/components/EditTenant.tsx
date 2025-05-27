@@ -3,9 +3,10 @@ import {
   Dialog, DialogTitle, DialogActions, DialogContent, Box, SelectChangeEvent,
   FormControl,InputLabel,Select,MenuItem,FormHelperText, Button, Alert, IconButton
 } from '@mui/material'
-import { IonInput } from '@ionic/react'
-import db from '../backend/db'
+import { IonInput, IonItem } from '@ionic/react'
+import {db, Tenant} from '../backend/db'
 import {deleteTenantAndHistory} from '../pages/Settings'
+import { FormControlLabel, Switch } from '@mui/material'
 
 
 //icon
@@ -19,6 +20,8 @@ interface EditTenantProps {
 
 const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
   const [alert,setAlert] = useState<{severity: 'success' | 'error' | 'warning' | 'info', msg: string}>()
+  const [isCutOff, setIsCutOff] = useState(false);
+
   //name
   const [name, setName] = useState<string>(' ');
     const handleInputName = useCallback((e: any) => {
@@ -47,7 +50,7 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
       
     })()
     
-  },[open,id])
+  },[open,id,isCutOff])
 
   const [helperName, setHelperName] = useState<string>('');
   const [helperRoom, setHelperRoom] = useState<string>('');
@@ -87,25 +90,61 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     setIsDelete(true)
     setAlert(undefined)
   },[])
-   
+
+  const handleCutOffSwitch = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { checked } = event.target;
+      const tenant = await db.tenants.get(id)
+
+      if (checked) {
+        await db.cutoff.add({ id, name: tenant?.name, room: tenant?.room, date: new Date().toLocaleDateString() });
+        await db.quarantine.add( tenant as any);
+        await db.tenants.update(id, { room: 'CUTOFF' });
+      } else {
+        const tenantData = await db.quarantine.get(id);
+        if (tenantData) {
+          await db.tenants.update(id, tenantData as Tenant);
+          await db.cutoff.delete(id);
+          await db.quarantine.delete(id);
+        }
+      }
+
+      setIsCutOff(checked);
+  }, [id])
+
+  useEffect(() => {
+    const fetchCutOff = async () => {
+      const cutoff = await db.cutoff.get(id);
+      if (cutoff) {
+        setIsCutOff(true);
+      }
+    };
+    fetchCutOff();
+  }, [id]);
+
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Edit Profile</DialogTitle>
       <DialogContent>
         <Box className='flex flex-col gap-4'>
-        <FormControl variant='standard' className='w-full m-1'>
-            <InputLabel>Room Number</InputLabel>
-            <Select label="Room Number" value={room} onChange={handleInputRoom}>
-            {
-              roomNumber.map((room,index) => (
-                <MenuItem key={index} value={room}>{room}</MenuItem>
-              ))
-            }
-            </Select>
-            <FormHelperText>{helperRoom}</FormHelperText>
-          </FormControl>
+          {!isCutOff && (
+            <FormControl variant='standard' className='w-full m-1'>
+              <InputLabel>Room Number</InputLabel>
+              <Select label="Room Number" value={room} onChange={handleInputRoom}>
+              {
+                roomNumber.map((room,index) => (
+                  <MenuItem key={index} value={room}>{room}</MenuItem>
+                ))
+              }
+              </Select>
+              <FormHelperText>{helperRoom}</FormHelperText>
+            </FormControl>
+          )}
           <IonInput counter={true} maxlength={50} helperText={helperName} value={name} onIonInput={handleInputName} labelPlacement='floating' label='Name' />
-          
+          <FormControlLabel 
+            control={<Switch checked={isCutOff} onChange={handleCutOffSwitch} />} 
+            label={<span style={{ color: '#131c2b' }}>{isCutOff ? 'Cutoff Enabled' : 'Cutoff Disabled'}</span>} 
+              labelPlacement='end'
+          />
         </Box>
         {alert && (
           <Alert severity={alert.severity}>{alert.msg}</Alert>
