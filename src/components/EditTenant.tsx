@@ -3,7 +3,7 @@ import {
   Dialog, DialogTitle, DialogActions, DialogContent, Box, SelectChangeEvent,
   FormControl,InputLabel,Select,MenuItem,FormHelperText, Button, Alert, IconButton
 } from '@mui/material'
-import { IonInput, IonItem } from '@ionic/react'
+import { IonInput } from '@ionic/react'
 import {db, Tenant} from '../backend/db'
 import {deleteTenantAndHistory} from '../pages/Settings'
 import { FormControlLabel, Switch } from '@mui/material'
@@ -143,6 +143,11 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
           <FormControlLabel 
             control={<Switch checked={isCutOff} onChange={handleCutOffSwitch} />} 
             label={<span style={{ color: '#131c2b' }}>{isCutOff ? 'Cutoff Enabled' : 'Cutoff Disabled'}</span>} 
+              labelPlacement='end'
+          />
+          <FormControlLabel 
+            control={<Switch checked={isCutOff} onChange={handleCutOffSwitch} />} 
+            label={<span style={{ color: '#131c2b' }}>{isCutOff ? 'Old payment Enabled' : 'Old payment Disabled'}</span>} 
               labelPlacement='end'
           />
         </Box>
