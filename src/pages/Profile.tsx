@@ -295,7 +295,7 @@ const Profile: React.FC = () => {
             <IonRow>
               <IonCol className='grid grid-rows-2'>
                 <Box className='row-span-1 flex justify-center'>
-                  <Box className='font-bold'>{tenant?.balance}</Box>
+                  <Box className='font-bold'>{(tenant?.balance || 0) + (tenant?.oldpayment_amount || 0)}</Box>
                 </Box>
                 <Box className='row-span-1 flex justify-center text-sm'>Balance</Box>
               </IonCol>

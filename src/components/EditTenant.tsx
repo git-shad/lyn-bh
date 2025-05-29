@@ -24,7 +24,7 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
 
   //name
   const [name, setName] = useState<string>(' ');
-    const handleInputName = useCallback((e: any) => {
+  const handleInputName = useCallback((e: any) => {
       setName(e.detail.value)
   },[])
 
@@ -52,22 +52,6 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     
   },[open,id,isCutOff])
 
-  const [helperName, setHelperName] = useState<string>('');
-  const [helperRoom, setHelperRoom] = useState<string>('');
-  const handleSave = useCallback(async ()=>{
-    if(!name || !room) {
-      if(!name) setHelperName('Name is required')
-      if(!room) setHelperRoom('Room is required')
-      return;
-    }
-    await db.tenants.update(id,{name: name, room: room})
-    setAlert({severity: 'success', msg: 'Save!'})
-
-    setTimeout(()=>{
-      setAlert(undefined)
-    },5000)
-  },[name,room])
-
   const [isDelete, setIsDelete] = useState(true)
   const handleDeleteTenant = useCallback(()=>{
 
@@ -92,56 +76,82 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
   },[])
 
   const handleCutOffSwitch = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const { checked } = event.target;
-      const tenant = await db.tenants.get(id)
-
-      if (checked) {
-        await db.cutoff.add({ id, name: tenant?.name, room: tenant?.room, date: new Date().toLocaleDateString() });
-        await db.quarantine.add( tenant as any);
-        await db.tenants.update(id, { room: 'CUTOFF' });
-      } else {
-        const tenantData = await db.quarantine.get(id);
-        if (tenantData) {
-          await db.tenants.update(id, tenantData as Tenant);
-          await db.cutoff.delete(id);
-          await db.quarantine.delete(id);
-        }
-      }
-
-      setIsCutOff(checked);
+    const { checked } = event.target;
+    setIsCutOff(checked);
   }, [id])
 
-  useEffect(() => {
-    const fetchCutOff = async () => {
-      const cutoff = await db.cutoff.get(id);
-      if (cutoff) {
-        setIsCutOff(true);
-      }
-    };
-    fetchCutOff();
-  }, [id]);
-
-
   const [OldPayment, setOldPayment] = useState(false);
+  const [OldPaymentAmount, setOldPaymentAmount] = useState<number>(0);
   const handleOldPaymentSwitch = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const { checked } = event.target;
-    await db.tenants.update(id, { oldpayment_isOn: checked });
     setOldPayment(checked);
   }, [id]);
 
   useEffect(() => {
-    const fetchOldPayment = async () => {
+    const fetchFunction = async () => {
       const tenant = await db.tenants.get(id);
+      const cutoff = await db.cutoff.get(id);
       if (tenant) {
         setOldPayment(tenant.oldpayment_isOn);
+        setOldPaymentAmount(tenant.oldpayment_amount || 0);
+      }
+
+      if (cutoff) {
+        setIsCutOff(true);
       }
     };
-    fetchOldPayment();
+    fetchFunction();
   }, [id]);
+
   
+  const handleOldPaymentAmountChange = useCallback(async (e: any) => {
+    const value = parseInt(e.detail.value);
+    if (!isNaN(value)) {
+      setOldPaymentAmount(value);
+    }
+  }, [id]);
+
+  const [helperName, setHelperName] = useState<string>('');
+  const [helperRoom, setHelperRoom] = useState<string>('');
+  const handleSave = useCallback(async ()=>{
+    if(!name || !room) {
+      if(!name) setHelperName('Name is required')
+      if(!room) setHelperRoom('Room is required')
+      return;
+    }
+
+    await db.tenants.update(id,{
+      name: name, 
+      room: room, 
+      oldpayment_isOn: OldPayment, 
+      oldpayment_amount: OldPayment ? OldPaymentAmount : 0
+    })
+
+    const tenant = await db.tenants.get(id)
+
+    if (isCutOff) {
+      await db.cutoff.add({ id, name: tenant?.name, room: tenant?.room, date: new Date().toLocaleDateString() });
+      await db.quarantine.add( tenant as any);
+      await db.tenants.update(id, { room: 'CUTOFF' });
+    } else {
+      const tenantData = await db.quarantine.get(id);
+      if (tenantData) {
+        await db.tenants.update(id, tenantData as Tenant);
+        await db.cutoff.delete(id);
+        await db.quarantine.delete(id);
+      }
+    }
+
+    setAlert({severity: 'success', msg: 'Save!'})
+
+    setTimeout(()=>{
+      setAlert(undefined)
+    },5000)
+  },[name, room, isCutOff, OldPayment, OldPaymentAmount, id])
+
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Edit Profile</DialogTitle>
+      <DialogTitle>Tenant Profile</DialogTitle>
       <DialogContent>
         <Box className='flex flex-col gap-4'>
           {!isCutOff && (
@@ -168,6 +178,9 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
             label={<span style={{ color: '#131c2b' }}>{OldPayment ? 'Old payment Enabled' : 'Old payment Disabled'}</span>} 
               labelPlacement='end'
           />
+          {OldPayment && (
+            <IonInput counter={true} maxlength={6} value={OldPaymentAmount} onIonInput={handleOldPaymentAmountChange} labelPlacement='floating' label='Old Payment Amount' />
+          )}
         </Box>
         {alert && (
           <Alert severity={alert.severity}>{alert.msg}</Alert>
