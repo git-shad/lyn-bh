@@ -121,6 +121,24 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     fetchCutOff();
   }, [id]);
 
+
+  const [OldPayment, setOldPayment] = useState(false);
+  const handleOldPaymentSwitch = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { checked } = event.target;
+    await db.tenants.update(id, { oldpayment_isOn: checked });
+    setOldPayment(checked);
+  }, [id]);
+
+  useEffect(() => {
+    const fetchOldPayment = async () => {
+      const tenant = await db.tenants.get(id);
+      if (tenant) {
+        setOldPayment(tenant.oldpayment_isOn);
+      }
+    };
+    fetchOldPayment();
+  }, [id]);
+  
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Edit Profile</DialogTitle>
@@ -146,8 +164,8 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
               labelPlacement='end'
           />
           <FormControlLabel 
-            control={<Switch checked={isCutOff} onChange={handleCutOffSwitch} />} 
-            label={<span style={{ color: '#131c2b' }}>{isCutOff ? 'Old payment Enabled' : 'Old payment Disabled'}</span>} 
+            control={<Switch checked={OldPayment} onChange={handleOldPaymentSwitch} />} 
+            label={<span style={{ color: '#131c2b' }}>{OldPayment ? 'Old payment Enabled' : 'Old payment Disabled'}</span>} 
               labelPlacement='end'
           />
         </Box>

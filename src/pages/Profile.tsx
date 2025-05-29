@@ -12,7 +12,8 @@ import EditTenant from '../components/EditTenant';
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { flash, home, water } from 'ionicons/icons';
+import { IoClose } from "react-icons/io5";
+import { flash, home, water,addCircle } from 'ionicons/icons';
 import PaidIcon from '@mui/icons-material/Paid';
 import { PiHandCoinsFill } from "react-icons/pi";
 import HistoryIcon from '@mui/icons-material/History';
@@ -83,16 +84,22 @@ const Profile: React.FC = () => {
   const [history, setHistory] = useState<TenantHistory>();
 
 
+  const [OldPayment, setOldPayment] = useState(false);
+  const fetchOldPayment = useCallback(async () => {
+    const tenant = await db.tenants.get(id);
+    setOldPayment(tenant?.oldpayment_isOn || false);
+  }, [db]);
+
   const [isCutOff, setIsCutOff] = useState(false)
-  
-  const fetchCutOff = async () => {
+  const fetchCutOff = useCallback(async () => {
     const cutoff = await db.cutoff.get(id);
     if (cutoff) {
       setIsCutOff(true);
     }else{
       setIsCutOff(false);
     }
-  };
+  },[db])
+
   // Fetch tenant data and bills
   // and history when the component mounts
   // and when the id changes
@@ -121,6 +128,7 @@ const Profile: React.FC = () => {
       }
     })();
     fetchCutOff();
+    fetchOldPayment();
   }, [id, GoTo,tenant]);
 
   //for paying button
@@ -217,6 +225,8 @@ const Profile: React.FC = () => {
     setOpen(prev => !prev);
   }, []);
 
+  // For delete item
+  // openDeleteItemR for rent, openDeleteItemW for water, openDeleteItemE for electric
   const [openDeleteItemR,setOpenDeleteItemR] = useState<number>();
   const [openDeleteItemW,setOpenDeleteItemW] = useState<number>();
   const [openDeleteItemE,setOpenDeleteItemE] = useState<number>();
@@ -314,7 +324,7 @@ const Profile: React.FC = () => {
                 {!isAddCoin && (
                   <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
                 )}
-                <IconButton onClick={() => setIsAddCoin(!isAddCoin)} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon><PiHandCoinsFill /></SvgIcon></IconButton>
+                <IconButton onClick={() => setIsAddCoin(!isAddCoin)} color={isAddCoin ? 'error' : 'primary'} sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon>{!isAddCoin ? (<PiHandCoinsFill />):(<IoClose/>)}</SvgIcon></IconButton>
                 {isAddCoin && (
                   <IconButton onClick={handleAddCoin} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><DoneIcon /></IconButton>
                 )}
@@ -327,6 +337,14 @@ const Profile: React.FC = () => {
         <Box className='flex flex-col w-full'>
           <Box className='font-semibold text-lg' style={{ color: '#131c2b' }}>Utility Bills</Box>
           <IonAccordionGroup expand='inset'>
+            {OldPayment && (
+              <IonAccordion value='Old Payments'>
+                <IonItem slot='header' color='light'>
+                  <IonIcon icon={addCircle} className='mr-4' />
+                  <IonLabel>Old Payments</IonLabel>
+                </IonItem>
+              </IonAccordion>
+            )}
             <IonAccordion value='rent'>
               <IonItem slot='header' color='light'>
                 <IonIcon icon={home} className='mr-4' />
