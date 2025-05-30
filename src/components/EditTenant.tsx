@@ -108,6 +108,8 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     const value = parseInt(e.detail.value);
     if (!isNaN(value)) {
       setOldPaymentAmount(value);
+    }else {
+      setOldPaymentAmount(0);
     }
   }, [id]);
 
@@ -190,7 +192,7 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
         
         {isDelete ? (
           <Box className='flex flex-row gap-2 w-full'>
-            <Box className='mr-5'>
+            <Box className='mr-5 justify-end flex-1'>
               <IconButton onClick={handleDeleteTenant} color='error' sx={{ border: '1px solid', borderRadius: '8px' }}><DeleteIcon/></IconButton>
             </Box>
             <Button onClick={onClose} variant='outlined'>Close</Button>

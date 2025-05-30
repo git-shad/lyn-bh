@@ -50,13 +50,13 @@ const Dashboard: React.FC = () => {
         <Box className='col-span-2 text-3xl font-extrabold' style={{ color: '#131c2b' }}>LYN BORDING HOUSE</Box>
       </Box>
       <Box className='flex flex-rows gap-4'>
-        <Box onClick={()=>{GoTo('/tenants')}} className='grid grid-cols-3 gap-4 w-full bg-blue-400 rounded-2xl p-4 shadow-md'>
+        <Box sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }} onClick={()=>{GoTo('/tenants')}} className='grid grid-cols-3 gap-4 w-full bg-blue-400 rounded-2xl p-4 shadow-md'>
           <Box className='col-span-1 flex justify-center items-center'>
             <FaHouseChimneyUser className='size-8'/>
           </Box>
           <Box className='col-span-2 font-semibold'>Tenants</Box>
         </Box>
-        <Box onClick={()=>{GoTo('/payments')}} className='grid grid-cols-3 gap-4 w-full bg-blue-400 rounded-2xl p-4 shadow-md'>
+        <Box sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }} onClick={()=>{GoTo('/payments')}} className='grid grid-cols-3 gap-4 w-full bg-blue-400 rounded-2xl p-4 shadow-md'>
           <Box className='col-span-1 flex justify-center items-center'>
             <MdPayments className='size-10'/>
           </Box>

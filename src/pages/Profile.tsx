@@ -280,7 +280,7 @@ const Profile: React.FC = () => {
         <Link to='/tenants'>
           <IconButton slot='start'><KeyboardArrowLeftIcon className='text-blue-500' /></IconButton>
         </Link>
-        <Button startIcon={<HistoryIcon />} onClick={() => setIsHidden(!isHidden)} slot='end' variant='contained' size='small'>History</Button>
+        <Button startIcon={<HistoryIcon />} onClick={() => setIsHidden(!isHidden)} slot='end' variant='contained' size='small' sx={{backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>History</Button>
       </IonItem>
       <Box className='m-4' hidden={isHidden}>
         <Box className='w-full' >
@@ -343,6 +343,15 @@ const Profile: React.FC = () => {
                   <IonIcon icon={addCircle} className='mr-4' />
                   <IonLabel>Old Payments</IonLabel>
                 </IonItem>
+                <IonList slot='content' lines='none'>
+                  <Box style={{ backgroundColor: '#131c2b' }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
+                    <Box className='row-span-1'>Amount: <span className='font-semibold'>{tenant?.oldpayment_amount}</span></Box>
+                    <Box className='row-span-1 flex justify-end'>
+                      <Button variant='contained' onClick={() => { handleDataBills({ amount: tenant?.oldpayment_amount || 0, date: tenant?.oldpayment_date || '' }, 'rent', 0) }} startIcon={<PaidIcon />} sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>paid</Button>
+                    </Box>
+                  </Box>
+                  <Box className='text-sm italic text-gray-500'>This is the old payment amount and date.</Box>
+                </IonList>
               </IonAccordion>
             )}
             <IonAccordion value='rent'>
@@ -362,7 +371,7 @@ const Profile: React.FC = () => {
                       <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                       { openDeleteItemR !== index && (
                         <Box className='row-span-1 flex justify-end'>
-                          <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'rent', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
+                          <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'rent', index) }} startIcon={<PaidIcon />} sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>paid</Button>
                         </Box>
                       )}
                     </Box>
@@ -386,7 +395,7 @@ const Profile: React.FC = () => {
                   <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                   { openDeleteItemW !== index && (
                     <Box className='row-span-1 flex justify-end'>
-                      <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'water', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
+                      <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'water', index) }} startIcon={<PaidIcon />} sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>paid</Button>
                     </Box>
                   )}
                   </Box>
@@ -410,7 +419,7 @@ const Profile: React.FC = () => {
                   <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                   { openDeleteItemE !== index && (
                     <Box className='row-span-1 flex justify-end'>
-                      <Button onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'electric', index) }} size='small' startIcon={<PaidIcon />} sx={{ textTransform: 'none' }}>paid</Button>
+                      <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'electric', index) }} startIcon={<PaidIcon />} sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>paid</Button>
                     </Box>
                   )}
                   </Box>
