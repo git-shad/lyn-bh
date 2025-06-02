@@ -9,17 +9,19 @@ import { useLocation } from 'react-router-dom';
 import { db, Tenant, RentBill, ElectricBill, WaterBill, TenantHistory } from '../backend/db';
 import { format, eachDayOfInterval } from 'date-fns';
 import EditTenant from '../components/EditTenant';
+import PayDialog from '../components/PayDialog'
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import { IoClose } from "react-icons/io5";
 import { flash, home, water,addCircle } from 'ionicons/icons';
-import PaidIcon from '@mui/icons-material/Paid';
 import { PiHandCoinsFill } from "react-icons/pi";
 import HistoryIcon from '@mui/icons-material/History';
 import DoneIcon from '@mui/icons-material/Done';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { FaMinusCircle } from "react-icons/fa";
+import { MdOutlinePayments } from "react-icons/md";
 
 const Profile: React.FC = () => {
   const location = useLocation();
@@ -30,6 +32,7 @@ const Profile: React.FC = () => {
     // Fill rent dates that have no history but have not been paid
     (async () => {
       const tenant = await db.tenants.get(id);
+      if (!tenant) return;
       const dateNow: string = new Date().toLocaleDateString();
       if (!tenant?.date || tenant?.balance === undefined) return;
  
@@ -43,8 +46,9 @@ const Profile: React.FC = () => {
       
       const singleRentBills = (Array.from(new Set(rentDateBills.map(bill => JSON.stringify(({amount: bill.amount, date: format(bill.date, 'M/yyyy')}))))).map(bill => JSON.parse(bill)))
       const currentRentBills = tenant.rent_bills?.map(bill => ({amount: bill.amount, date: format(new Date(bill.date), 'M/yyyy') })) || [];
-      const filteredRentBills = singleRentBills.filter(bill => !currentRentBills.some(currentBill => currentBill.date === bill.date && currentBill.amount === bill.amount)) 
-      const filteredRentHistory = rentHistory.map(date => format(date, 'M/yyyy'))//temp 
+      const filteredRentBills = singleRentBills.filter(bill => !currentRentBills.some(currentBill => currentBill.date === bill.date && currentBill.amount === bill.amount));
+      const filteredRentHistory = rentHistory.filter(date => '' != date).map(date => format(date, 'M/yyyy'))//temp
+
       const filterOnlyOneDate = filteredRentBills.filter(only => !filteredRentHistory.includes(only.date))
       const finalFilteringRentBills = filterOnlyOneDate.map(bill => {
         const [month,year] = bill.date.split('/');
@@ -131,7 +135,7 @@ const Profile: React.FC = () => {
     fetchOldPayment();
   }, [id, GoTo,tenant]);
 
-  //for paying button
+  //for pay button
   const handleDataBills = useCallback(async (data: {amount: number, date: string},bill: string, index: number)=>{
     const currentDate = new Date().toLocaleDateString()
     if(bill === 'rent' && tenant?.balance && tenant?.coin && history?.bills){
@@ -220,10 +224,10 @@ const Profile: React.FC = () => {
     return `${month} ${day}, ${year}`;
   }
 
-  const [open, setOpen] = useState(false);
-  const handleOpen = useCallback(() => {
-    setOpen(prev => !prev);
-  }, []);
+  const [openEditTenant, setOpenEditTenant] = useState(false);
+  const handleEditTenant = useCallback(() => {
+    setOpenEditTenant(prev => !prev);
+  }, [openEditTenant]);
 
   // For delete item
   // openDeleteItemR for rent, openDeleteItemW for water, openDeleteItemE for electric
@@ -273,7 +277,11 @@ const Profile: React.FC = () => {
     } 
   },[id, tenant, dRent, dWater, dElectric])
 
-  
+  const [openPayDialog, setOpenPayDialog] = useState(false)
+  const handlePayDialog = useCallback(()=>{
+    setOpenPayDialog(prov => !prov)
+  },[openPayDialog])
+
   return (
     <IonContent>
       <IonItem lines='none' className='sticky top-0 bg-transparent z-20'>
@@ -322,7 +330,7 @@ const Profile: React.FC = () => {
             <IonCol className='flex justify-end mt-2'>
               <Box className='flex flex-row'>
                 {!isAddCoin && (
-                  <IconButton onClick={handleOpen} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
+                  <IconButton onClick={handleEditTenant} color='primary' sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><ModeEditIcon /></IconButton>
                 )}
                 <IconButton onClick={() => setIsAddCoin(!isAddCoin)} color={isAddCoin ? 'error' : 'primary'} sx={{ border: '1px solid', borderRadius: '8px', m: 1 }}><SvgIcon>{!isAddCoin ? (<PiHandCoinsFill />):(<IoClose/>)}</SvgIcon></IconButton>
                 {isAddCoin && (
@@ -341,16 +349,17 @@ const Profile: React.FC = () => {
               <IonAccordion value='Old Payments'>
                 <IonItem slot='header' color='light'>
                   <IonIcon icon={addCircle} className='mr-4' />
-                  <IonLabel>Old Payments</IonLabel>
+                  <IonLabel className="font-bold">Old Payments</IonLabel>
                 </IonItem>
                 <IonList slot='content' lines='none'>
                   <Box style={{ backgroundColor: '#131c2b' }} className='grid grid-row-3 mx-2 mb-2 p-2 border rounded-md'>
-                    <Box className='row-span-1'>Amount: <span className='font-semibold'>{tenant?.oldpayment_amount}</span></Box>
+                    <Box className='row-span-1'>Need to Pay: <span className='font-semibold'>{tenant?.oldpayment_amount}</span></Box>
                     <Box className='row-span-1 flex justify-end'>
-                      <Button variant='contained' onClick={() => { handleDataBills({ amount: tenant?.oldpayment_amount || 0, date: tenant?.oldpayment_date || '' }, 'rent', 0) }} startIcon={<PaidIcon />} sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>paid</Button>
+                      <Button onClick={handlePayDialog} variant='contained' startIcon={<FaMinusCircle />} sx={{ backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>pay</Button>
                     </Box>
                   </Box>
-                  <Box className='text-sm italic text-gray-500'>This is the old payment amount and date.</Box>
+                  <Box className='w-full text-center text-sm italic text-gray-500'>This is the old payment amount</Box>
+                  <PayDialog open={openPayDialog} onClose={handlePayDialog} id={id}/>
                 </IonList>
               </IonAccordion>
             )}
@@ -371,7 +380,7 @@ const Profile: React.FC = () => {
                       <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                       { openDeleteItemR !== index && (
                         <Box className='row-span-1 flex justify-end'>
-                          <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'rent', index) }} startIcon={<PaidIcon />} sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>paid</Button>
+                          <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'rent', index) }} startIcon={<MdOutlinePayments />} sx={{ backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>pay</Button>
                         </Box>
                       )}
                     </Box>
@@ -395,7 +404,7 @@ const Profile: React.FC = () => {
                   <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                   { openDeleteItemW !== index && (
                     <Box className='row-span-1 flex justify-end'>
-                      <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'water', index) }} startIcon={<PaidIcon />} sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>paid</Button>
+                      <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'water', index) }} startIcon={<MdOutlinePayments />} sx={{ backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>pay</Button>
                     </Box>
                   )}
                   </Box>
@@ -419,7 +428,7 @@ const Profile: React.FC = () => {
                   <Box className='row-span-1'>Date: {formatDate(data?.date)}</Box>
                   { openDeleteItemE !== index && (
                     <Box className='row-span-1 flex justify-end'>
-                      <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'electric', index) }} startIcon={<PaidIcon />} sx={{ textTransform: 'none', backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>paid</Button>
+                      <Button variant='contained' onClick={() => { handleDataBills({ amount: data?.amount, date: data?.date }, 'electric', index) }} startIcon={<MdOutlinePayments />} sx={{ backgroundColor: '#2979ff', color: '#fff', boxShadow: '0 0 8px #2979ff', '&:hover': { backgroundColor: '#2962ff', boxShadow: '0 0 16px #2979ff', }, transition: 'box-shadow 0.3s ease-in-out', }}>pay</Button>
                     </Box>
                   )}
                   </Box>
@@ -444,10 +453,10 @@ const Profile: React.FC = () => {
                 Paid on:  <span className='font-semibold'>{formatDate(bill.end_date)}</span>
               </Box>
             </Box>
-          ) : (<Box></Box>))}
+          ) : (<Box key={index}></Box>))}
         </IonList>
       )}
-      <EditTenant open={open} onClose={handleOpen} id={id}/>
+      <EditTenant open={openEditTenant} onClose={handleEditTenant} id={id}/>
     </IonContent>
   );
 }

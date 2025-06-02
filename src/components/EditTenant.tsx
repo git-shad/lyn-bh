@@ -104,7 +104,7 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
   }, [id]);
 
   
-  const handleOldPaymentAmountChange = useCallback(async (e: any) => {
+  const handleOldPaymentAmountChange = useCallback((e: any) => {
     const value = parseInt(e.detail.value);
     if (!isNaN(value)) {
       setOldPaymentAmount(value);
