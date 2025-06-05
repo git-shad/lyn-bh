@@ -22,6 +22,7 @@ interface TenantBills{
     start_date: string
     end_date: string
 }
+
 interface TenantHistory{
     tenant_id: number
     bills?: TenantBills[]
@@ -84,8 +85,8 @@ interface QuarantineTenant{// tenant cutoff are stored in this table
     electric_bills?: ElectricBill[]
     water_bills?: WaterBill[]
     rent_bills?: RentBill[]
-    oldpayment_amount: number
-    oldpayment_isOn: boolean
+    oldpayment_amount?: number
+    oldpayment_isOn?: boolean
 }
 
 //register table types for Dexie
@@ -99,7 +100,7 @@ const db = new Dexie('tenantDB') as Dexie & {
     quarantine: EntityTable<QuarantineTenant,'id'>
 }
 
-db.version(31).stores({
+db.version(32).stores({
     tenants: '++id,name,room,date,coin,balance,*electric_bills,*water_bills,*rent_bills,oldpayment_amount,oldpayment_isOn',
     history: 'tenant_id,*TenantBills',
     storage: 'key,value',
