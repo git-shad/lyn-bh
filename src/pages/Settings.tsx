@@ -6,9 +6,6 @@ import { initializeApp } from "firebase/app";
 import { collection, doc, setDoc, getDoc, getDocs, getFirestore, deleteDoc } from 'firebase/firestore';
 import { isOnline } from '../backend/Online'
 
-//icon
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-
 interface FirebaseConfig {
    apiKey: string;
    authDomain: string;
