@@ -19,6 +19,16 @@ interface EditTenantProps {
 }
 
 const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
+  const [tenant,setTenant] = useState<Tenant>()
+
+  useEffect(()=>{
+    (async ()=>{
+      const tenant = await db.tenants.get(id)
+      setTenant(tenant)
+    })()
+
+  },[tenant])
+
   const [alert,setAlert] = useState<{severity: 'success' | 'error' | 'warning' | 'info', msg: string}>()
   const [isCutOff, setIsCutOff] = useState(false);
 
@@ -41,16 +51,9 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
 
   useEffect(()=>{
     if(!open) return;
-    
-    (async ()=>{
-      const tenant = await db.tenants.get(id)
-      
-      setRoomSelected(tenant?.room || '')
-      setName(tenant?.name || '')
-      
-    })()
-    
-  },[open,id,isCutOff])
+    setRoomSelected(tenant?.room || '')
+    setName(tenant?.name || '')
+  },[open,id,isCutOff,tenant])
 
   const [isDelete, setIsDelete] = useState(true)
   const handleDeleteTenant = useCallback(()=>{
@@ -62,36 +65,38 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     }
 
     setAlert({severity: 'success', msg: 'Deleting pending'})
+
     setTimeout(async ()=>{
       if(!isDelete){
         await db.tenants.delete(id)
         await deleteTenantAndHistory(id)
       }
     },1000)
+
   },[isDelete])
 
   const handleCancelDeleteTenant = useCallback(()=>{
     setIsDelete(true)
     setAlert(undefined)
+    onClose()
   },[])
 
   const handleCutOffSwitch = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const { checked } = event.target;
     setIsCutOff(checked);
-  }, [id])
+  }, [])
 
   const [OldPayment, setOldPayment] = useState(false);
   const [OldPaymentAmount, setOldPaymentAmount] = useState<number>(0);
   const handleOldPaymentSwitch = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const { checked } = event.target;
     setOldPayment(checked);
-  }, [id]);
+  }, []);
 
   useEffect(() => {
     const fetchFunction = async () => {
-      const tenant = await db.tenants.get(id);
       const cutoff = await db.cutoff.get(id);
-      if (tenant) {
+      if(tenant){
         setOldPayment(tenant.oldpayment_isOn);
         setOldPaymentAmount(tenant.oldpayment_amount || 0);
       }
@@ -100,8 +105,14 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
         setIsCutOff(true);
       }
     };
-    fetchFunction();
-  }, [id]);
+  fetchFunction();
+  }, [id,tenant?.oldpayment_isOn]);
+
+  useEffect(()=>{
+    if(tenant?.oldpayment_amount && OldPayment){
+      setOldPaymentAmount(tenant.oldpayment_amount || 0);
+    }
+  },[tenant?.oldpayment_amount])
 
   
   const handleOldPaymentAmountChange = useCallback((e: any) => {
@@ -111,7 +122,7 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     }else {
       setOldPaymentAmount(0);
     }
-  }, [id]);
+  }, []);
 
   const [helperName, setHelperName] = useState<string>('');
   const [helperRoom, setHelperRoom] = useState<string>('');
@@ -128,8 +139,6 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
       oldpayment_isOn: OldPayment, 
       oldpayment_amount: OldPayment ? OldPaymentAmount : 0
     })
-
-    const tenant = await db.tenants.get(id)
 
     if (isCutOff) {
       await db.cutoff.add({ id, name: tenant?.name, room: tenant?.room, date: new Date().toLocaleDateString() });
@@ -149,7 +158,7 @@ const EditTenant: React.FC<EditTenantProps> = ({id,open,onClose})=> {
     setTimeout(()=>{
       setAlert(undefined)
     },5000)
-  },[name, room, isCutOff, OldPayment, OldPaymentAmount, id])
+  },[name, room, isCutOff, OldPayment, OldPaymentAmount, id, tenant])
 
   return (
     <Dialog open={open} onClose={onClose}>

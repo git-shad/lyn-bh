@@ -27,7 +27,10 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
   //room
   const [roomNumber, setRoomNumber] = useState<string[]>([]);
   useEffect(()=>{
-    (async()=>setRoomNumber((await db.storage.get('rooms'))?.value))()
+    (async()=>{
+      const rooms = (await db.storage.get('rooms'))?.value
+      setRoomNumber(rooms)
+    })()
   },[])
 
   const [room, setRoomSelected] = useState<string>('');
@@ -90,9 +93,11 @@ const NewTenant: React.FC<NewTenantProps> = ({open,onClose}) => {
       date: startDate as string,
       coin: amount,
       balance: balance,
-      rent_bills: balance > 0 ? [{amount: balance, date: startDate as string}] : [],
+      rent_bills: balance > 0 ? [{ amount: balance, date: startDate as string }] : [],
       water_bills: [],
-      electric_bills: []
+      electric_bills: [],
+      oldpayment_amount: 0,
+      oldpayment_isOn: false
     } 
 
     if (id !== undefined) {

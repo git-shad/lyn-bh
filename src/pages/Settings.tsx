@@ -151,7 +151,7 @@ const handleDeleteDB = async () => {
       await db.transaction('rw', db.tenants, db.history, db.storage, db.hebills, async () => {
          await db.tenants.clear();
          await db.history.clear();
-         await db.storage.clear();
+         // await db.storage.clear();
          await db.hebills.clear();
       });
       console.log('Database cleared');

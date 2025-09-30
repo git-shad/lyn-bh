@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   IonContent, IonItem, IonGrid, IonRow, IonCol, IonIcon,
@@ -8,9 +8,10 @@ import { Button, IconButton, SvgIcon, Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import { db, Tenant, RentBill, ElectricBill, WaterBill, TenantHistory } from '../backend/db';
 import { format, eachDayOfInterval } from 'date-fns';
-import EditTenant from '../components/EditTenant';
-import PayDialog from '../components/PayDialog'
-import History from './Historys'
+
+const EditTenant = lazy(() => import('../components/EditTenant')); // Lazy load EditTenant component
+const PayDialog = lazy(() => import('../components/PayDialog')); // Lazy load PayDialog component
+const History = lazy(() => import('../components/Historys')); // Lazy load History component
 
 //icon
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
@@ -361,7 +362,9 @@ const Profile: React.FC = () => {
                     </Box>
                   </Box>
                   <Box className='w-full text-center text-sm italic text-gray-500'>This is the old payment amount</Box>
-                  <PayDialog open={openPayDialog} onClose={handlePayDialog} id={id}/>
+                  <Suspense fallback={null}>
+                    <PayDialog open={openPayDialog} onClose={handlePayDialog} id={id}/>
+                  </Suspense>
                 </IonList>
               </IonAccordion>
             )}
@@ -442,9 +445,13 @@ const Profile: React.FC = () => {
       </IonItem>
       
       {isHidden && (
-        <History id={id}/>
+        <Suspense fallback={null}>
+          <History id={id}/>
+        </Suspense>
       )}
-      <EditTenant open={openEditTenant} onClose={handleEditTenant} id={id}/>
+      <Suspense fallback={null}>
+        <EditTenant open={openEditTenant} onClose={handleEditTenant} id={id}/>
+      </Suspense>
     </IonContent>
   );
 }
