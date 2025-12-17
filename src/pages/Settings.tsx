@@ -1,33 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Box,FormControlLabel,Switch, Paper, Alert} from '@mui/material'
+import { Box,FormControlLabel,Switch, Paper, Alert, Button, Card, CardHeader, CardActions, Avatar, CardContent} from '@mui/material'
 import { db as dexie } from '../backend/db'
 import { Dexie } from 'dexie'
-import { initializeApp } from "firebase/app";
-import { collection, doc, setDoc, getDoc, getDocs, getFirestore, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc, getDocs, deleteDoc } from 'firebase/firestore';
 import { isOnline } from '../backend/Online'
-
-interface FirebaseConfig {
-   apiKey: string;
-   authDomain: string;
-   projectId: string;
-   storageBucket: string;
-   messagingSenderId: string;
-   appId: string;
-   measurementId: string;
-}
-
-const firebaseConfig: FirebaseConfig = {
-   apiKey: "AIzaSyDipb6CMvCJxVcENxVoWtWmm70Pb-4VO9A",
-   authDomain: "lyn-bh.firebaseapp.com",
-   projectId: "lyn-bh",
-   storageBucket: "lyn-bh.firebasestorage.app",
-   messagingSenderId: "236545334685",
-   appId: "1:236545334685:web:ddc227a81b2a04548ba374",
-   measurementId: "G-QTGPFEY8KL"
-}
-
-const app = initializeApp(firebaseConfig);
-const firestore = getFirestore(app);
+import { firestore } from '../backend/firebase'
+import { red } from '@mui/material/colors';
+import { signOut } from 'firebase/auth';
+import { auth } from '../backend/firebase';
+import ProfileDialog from '../components/ProfileDialog';
 
 const syncAllTables = async () => {
    const syncTable = async <T extends { [x: string]: any }>(table: Dexie.Table<T, any>, collectionName: string, keyField: string) => {
@@ -165,8 +146,30 @@ const Settings = ()=>{
    const [isRetrieve, setIsRetrieve] = useState<boolean>(false);
    const [isResetRecord, setIsResetRecord] = useState<boolean>(false)
    const [isResetDB, setIsResetDB] = useState(false)
+
+   const [email, setEmail] = useState<string | null>(null);
+   const [lastSignIn, setLastSignIn] = useState<string | null>(null);
     
    useEffect(() => {
+      const email = dexie.storage.get('email');
+      const lastSignIn = dexie.storage.get('lastsignin');
+      const username = dexie.storage.get('username');
+      username.then((result) => {
+         if (result?.value !== '') {
+            setEmail(result?.value ?? null);
+            return;
+         }
+
+         email.then((result) => {
+            setEmail(result?.value ?? null);
+         });
+      });
+      
+
+      lastSignIn.then((result) => {
+         setLastSignIn(result?.value ?? null);
+      });
+
       (async () => {
          const syncdb = await dexie.settings.get('syncdb');
          setIsSync(syncdb?.value ?? false);
@@ -203,28 +206,82 @@ const Settings = ()=>{
       setIsResetDB(checked);
    }, []);
 
+   const [variant, setVariant] = useState<'outlined' | 'contained'>('outlined');
+   const [isLogout, setIsLogout] = useState(false);// true if ready to logout
+   const handleLogout = useCallback(async ()=>{
+      if(!isLogout){ //if false, set to true
+         setVariant('contained');
+         setIsLogout(true);
+         return;
+      }
+
+      try{
+         await signOut(auth);
+         await dexie.storage.delete('email');
+         await dexie.storage.delete('lastsignin');
+         window.location.reload();
+      }catch(error: any){}
+   },[isLogout])
+
+   const handleLogoutCancel = useCallback(async ()=>{
+      if(isLogout){ //if true, set to false
+         setVariant('outlined');
+         setIsLogout(false);
+         return;
+      }
+   },[isLogout])
+
+   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+
    return (
-      <Box className='flex flex-col gap-2 p-2'>
+      <Box className='flex flex-col gap-2 p-2 '>
+         <ProfileDialog open={isProfileDialogOpen} onClose={() => setIsProfileDialogOpen(false)} />
+         <Card>
+            <CardHeader
+            onClick={()=> setIsProfileDialogOpen(true)}
+            avatar={
+               <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
+                  {email ? email.charAt(0).toUpperCase() : ''}
+               </Avatar>
+            }
+            title={email}
+            subheader={lastSignIn}
+            />
+            
+            {isLogout && (
+               <CardContent>
+                  <Alert severity="warning">
+                     Warning: Logging out will disable data syncing and retrieval features. Make sure to log back in to continue using these functionalities.
+                  </Alert>
+               </CardContent>  
+            )}
+            <CardActions>
+               <Button onClick={handleLogout} size="small" color="error" sx={{ ml: "auto", display: "block" }} variant={variant} >Log Out</Button>
+               {isLogout && (
+                  <Button onClick={handleLogoutCancel} size="small" color="error" sx={{ ml: "auto", display: "block" }} variant='outlined' >Cancel</Button>
+               )}
+            </CardActions>
+         </Card>
          <Paper className='p-2'>
-            <Box className='text-sm text-gray-600'>
+            <Box className='text-sm text-gray-500'>
                Note: Any changes made here will take effect after restarting the application.
             </Box>
          </Paper>
-         <Paper className='p-2'>
+         <Paper elevation={2} className='p-2'>
          <FormControlLabel 
             control={<Switch checked={isSync} onChange={handleSyncData} />} 
             label="Syncing Data Changes" 
             labelPlacement='end'
          />
          </Paper>
-         <Paper className='p-2'>
+         <Paper elevation={2} className='p-2'>
          <FormControlLabel 
             control={<Switch checked={isRetrieve} onChange={handleRetrieveData} />} 
             label='Retrieve Data' 
             labelPlacement='end'
          />
          </Paper>
-         <Paper className='p-2'>
+         <Paper elevation={2} className='p-2'>
             <FormControlLabel 
                control={<Switch checked={isResetRecord} onChange={handleResetRecord} />} 
                label='Reset Tenant Record' 
@@ -234,7 +291,7 @@ const Settings = ()=>{
                <Alert severity="warning">WARNING: Permanent reset tenant's data record</Alert>
             )}
          </Paper>
-         <Paper className='p-2'>
+         <Paper elevation={2} className='p-2'>
             <FormControlLabel 
                control={<Switch checked={isResetDB} onChange={handleResetDBRecord} />} 
                label='Delete Intire data' 
@@ -248,5 +305,5 @@ const Settings = ()=>{
    )
 }
 
-export { syncAllTables, syncFirestoreToDexie, deleteTenantAndHistory, handleResetTenantRecord, handleDeleteDB}
+export { syncAllTables, syncFirestoreToDexie, deleteTenantAndHistory, handleResetTenantRecord, handleDeleteDB }
 export default Settings

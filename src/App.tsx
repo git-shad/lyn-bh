@@ -44,10 +44,13 @@ import Tenants from './pages/Tenants';
 import BillingAndPayments from './pages/BillingAndPayments';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import db from './backend/db'
 import {ThreeDot} from 'react-loading-indicators'
 import { syncAllTables, syncFirestoreToDexie, handleResetTenantRecord, handleDeleteDB} from './pages/Settings'
+import Login from  './pages/Login'
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from './backend/firebase'
 
 //icon
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -58,6 +61,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 const App: React.FC = () => {
   const [isBusy, setIsBusy] = useState(true);
   const [loading, setLoading] = useState('loading...');
+  const [needToLogin,setNeedToLogin] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -87,14 +91,28 @@ const App: React.FC = () => {
       setIsBusy(false);
     };
 
-    fetchData();
+    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
+      console.log(user);
+      if(user != null){
+        setNeedToLogin(false);
+      }
+      fetchData();
+    })
+
+    return () => unsubscribe();
   }, []);
 
   if (isBusy) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <ThreeDot variant="bounce" color="#3183cc" size="large" text={loading} textColor="" />
+        <ThreeDot variant="bounce" color="#3183cc" size="large" text={loading} textColor="" />
       </div>
+    )
+  }
+
+  if(needToLogin){
+    return (
+      <Login />
     )
   }
    
@@ -106,7 +124,7 @@ const App: React.FC = () => {
             <IonTitle style={{ color: '#131c2b' }} slot='end'>Menu</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent>
+        <IonContent style={{ size: '100%' }}>
           <IonList inset={true} lines='none'>
             <IonItem>
               <Button component={Link} to='/dashboard' fullWidth sx={{justifyContent: 'left', textTransform: 'none'}} startIcon={<DashboardIcon/>}>Dashboard</Button>
